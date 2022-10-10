@@ -40,6 +40,7 @@
 #include <Corrade/Utility/Debug.h>
 #endif
 #include <Corrade/Utility/Macros.h> /* CORRADE_CONSTEXPR14 */
+#include <Corrade/Utility/Macros.h>
 
 #include "Magnum/Magnum.h"
 #include "Magnum/Math/Math.h"
@@ -169,7 +170,7 @@ template<std::size_t size> class BitVector {
          * @brief Set a bit at given position
          * @m_since_latest
          */
-        BitVector<size>& set(std::size_t i) {
+        CORRADE_CONSTEXPR14 BitVector<size>& set(std::size_t i) {
             _data[i/8] |= 1 << i%8;
             return *this;
         }
@@ -209,14 +210,14 @@ template<std::size_t size> class BitVector {
          * Equivalent to @ref all().
          * @see @ref any(), @ref none()
          */
-        explicit operator bool() const { return all(); }
+        explicit CORRADE_CONSTEXPR14 operator bool() const { return all(); }
 
         /**
          * @brief Whether all bits are set
          *
          * @see @ref none(), @ref any(), @ref operator bool()
          */
-        bool all() const;
+        CORRADE_CONSTEXPR14 bool all() const;
 
         /**
          * @brief Whether no bits are set
@@ -397,7 +398,7 @@ template<std::size_t size> inline bool BitVector<size>::operator==(const BitVect
     return true;
 }
 
-template<std::size_t size> inline bool BitVector<size>::all() const {
+template<std::size_t size> CORRADE_CONSTEXPR14 inline bool BitVector<size>::all() const {
     /* Check all full segments */
     for(std::size_t i = 0; i != size/8; ++i)
         if(_data[i] != FullSegmentMask)
