@@ -34,6 +34,9 @@ struct BitVectorCpp14Test: TestSuite::Tester {
     explicit BitVectorCpp14Test();
 
     void accessConstexpr();
+    void setConstexpr();
+    void convertBoolConstexpr();
+    void allConstexpr();
 };
 
 /* What's a typedef and not a using differs from the typedefs in root Magnum
@@ -41,8 +44,16 @@ struct BitVectorCpp14Test: TestSuite::Tester {
 typedef Math::BitVector<19> BitVector19;
 
 BitVectorCpp14Test::BitVectorCpp14Test() {
-    addTests({&BitVectorCpp14Test::accessConstexpr});
+    addTests({&BitVectorCpp14Test::accessConstexpr,
+              &BitVectorCpp14Test::setConstexpr,
+              &BitVectorCpp14Test::convertBoolConstexpr,
+              &BitVectorCpp14Test::allConstexpr});
 }
+
+/* Same condition as MAGNUM_BITVECTOR_SET_CONSTEXPR14 in BitVector.h */
+#if defined(CORRADE_TARGET_GCC) && !defined(CORRADE_TARGET_CLANG) && __GNUC__*100 + __GNUC_MINOR__ < 602
+#define SKIP_CONSTEXPR_SET
+#endif
 
 constexpr BitVector19 populate() {
     BitVector19 a;
@@ -55,6 +66,39 @@ constexpr BitVector19 populate() {
 void BitVectorCpp14Test::accessConstexpr() {
     constexpr BitVector19 a = populate();
     CORRADE_COMPARE(a, (BitVector19{0xc0, 0xff, 0xee}));
+}
+
+#ifndef SKIP_CONSTEXPR_SET
+constexpr BitVector19 setBit() {
+    BitVector19 a{0x08, 0x03, 0x04};
+    a.set(15);
+    return a;
+}
+#endif
+
+void BitVectorCpp14Test::setConstexpr() {
+    #ifdef SKIP_CONSTEXPR_SET
+    CORRADE_SKIP("Constexpr set() not supported by the compiler.");
+    #else
+    constexpr BitVector19 a = setBit();
+    CORRADE_COMPARE(a, (BitVector19{0x08, 0x83, 0x04}));
+    #endif
+}
+
+void BitVectorCpp14Test::convertBoolConstexpr() {
+    constexpr bool a = bool(BitVector19{0xff, 0xff, 0x07});
+    constexpr bool b = bool(BitVector19{0xff, 0xff, 0x04});
+    CORRADE_VERIFY(a);
+    CORRADE_VERIFY(!b);
+}
+
+void BitVectorCpp14Test::allConstexpr() {
+    constexpr bool a = BitVector19{0xff, 0xff, 0x07}.all();
+    constexpr bool b = BitVector19{0xff, 0xff, 0x0f}.all();
+    constexpr bool c = BitVector19{0xff, 0xff, 0x04}.all();
+    CORRADE_VERIFY(a);
+    CORRADE_VERIFY(b);
+    CORRADE_VERIFY(!c);
 }
 
 }}}}
