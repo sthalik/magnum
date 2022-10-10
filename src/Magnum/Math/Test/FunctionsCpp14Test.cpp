@@ -27,18 +27,46 @@
 #include <Corrade/TestSuite/Tester.h>
 
 #include "Magnum/Math/Functions.h"
-#include "Magnum/Math/Vector2.h"
+#include "Magnum/Math/Vector3.h"
 
 namespace Magnum { namespace Math { namespace Test { namespace {
 
 struct FunctionsCpp14Test: TestSuite::Tester {
     explicit FunctionsCpp14Test();
 
+    void constexprMinVector();
+    void constexprMaxVector();
+    void constexprMinmaxVector();
+    void constexprClampVector();
+    void constexprSign();
+    void constexprAbsVector();
+    void constexprLerp();
+    void constexprLerpBoolVector();
+    void constexprLerpInverted();
+    void constexprReflect();
+
+    void constexprLerpBoolBitVector();
     void constexprFmod();
     void constexprCopysign();
 };
 
+using Magnum::Constants;
+using Magnum::Vector3;
+
 FunctionsCpp14Test::FunctionsCpp14Test() {
+    addTests({&FunctionsCpp14Test::constexprMinVector,
+              &FunctionsCpp14Test::constexprMaxVector,
+              &FunctionsCpp14Test::constexprMinmaxVector,
+              &FunctionsCpp14Test::constexprClampVector,
+              &FunctionsCpp14Test::constexprSign,
+              &FunctionsCpp14Test::constexprAbsVector,
+              &FunctionsCpp14Test::constexprLerp,
+              &FunctionsCpp14Test::constexprLerpBoolVector,
+              &FunctionsCpp14Test::constexprLerpInverted,
+              &FunctionsCpp14Test::constexprReflect});
+
+    addTests({&FunctionsCpp14Test::constexprLerpBoolBitVector});
+
     addTests({&FunctionsCpp14Test::constexprFmod,
               &FunctionsCpp14Test::constexprCopysign});
 }
@@ -48,6 +76,102 @@ FunctionsCpp14Test::FunctionsCpp14Test() {
         static_assert(Math::abs(actual - expected) < 1e-8, ""); \
         CORRADE_COMPARE(actual, expected);                      \
     } while (false)
+
+void FunctionsCpp14Test::constexprMinVector() {
+    constexpr Vector3i a = Math::min(Vector3i{5, -3, 2}, Vector3i{9, -5, 18});
+    constexpr Vector3i b = Math::min(Vector3i{5, -3, 2}, 1);
+    CORRADE_COMPARE(a, (Vector3i{5, -5, 2}));
+    CORRADE_COMPARE(b, (Vector3i{1, -3, 1}));
+}
+
+void FunctionsCpp14Test::constexprMaxVector() {
+    constexpr Vector3i a = Math::max(Vector3i{5, -3, 2}, Vector3i{9, -5, 18});
+    constexpr Vector3i b = Math::max(Vector3i{5, -3, 2}, 3);
+    CORRADE_COMPARE(a, (Vector3i{9, -3, 18}));
+    CORRADE_COMPARE(b, (Vector3i{5, 3, 3}));
+}
+
+void FunctionsCpp14Test::constexprMinmaxVector() {
+    constexpr Containers::Pair<Vector3, Vector3> a = Math::minmax(Vector3{5.0f, -4.0f, 1.0f}, Vector3{7.0f, -3.0f, 1.0f});
+    constexpr Containers::Pair<Vector3, Vector3> b = Math::minmax(Vector3{7.0f, -3.0f, 1.0f}, Vector3{5.0f, -4.0f, 1.0f});
+    CORRADE_COMPARE(a.first(), (Vector3{5.0f, -4.0f, 1.0f}));
+    CORRADE_COMPARE(a.second(), (Vector3{7.0f, -3.0f, 1.0f}));
+    CORRADE_COMPARE(b.first(), (Vector3{5.0f, -4.0f, 1.0f}));
+    CORRADE_COMPARE(b.second(), (Vector3{7.0f, -3.0f, 1.0f}));
+}
+
+void FunctionsCpp14Test::constexprClampVector() {
+    constexpr Vector3 a = Math::clamp(Vector3{0.5f, -1.6f, 9.5f},
+                                      Vector3{-1.0f, 2.0f, 0.3f},
+                                      Vector3{0.7f, 3.0f, 5.0f});
+    constexpr Vector3 b = Math::clamp(Vector3{0.5f, -1.6f, 9.5f}, -1.0f, 5.0f);
+    CORRADE_COMPARE(a, (Vector3{0.5f, 2.0f, 5.0f}));
+    CORRADE_COMPARE(b, (Vector3{0.5f, -1.0f, 5.0f}));
+}
+
+void FunctionsCpp14Test::constexprSign() {
+    constexpr Int a = Math::sign(3516);
+    constexpr Float b = Math::sign(0.0f);
+    constexpr Double c = Math::sign(-3.7);
+    constexpr Vector3i d = Math::sign(Vector3i{0, -3, 2});
+    CORRADE_COMPARE(a, 1);
+    CORRADE_COMPARE(b, 0.0f);
+    CORRADE_COMPARE(c, -1.0);
+    CORRADE_COMPARE(d, (Vector3i{0, -1, 1}));
+}
+
+void FunctionsCpp14Test::constexprAbsVector() {
+    constexpr Vector3i a = Math::abs(Vector3i{5, -3, 2});
+    constexpr Vector3 b = Math::abs(Vector3{-5.5f, 3.0f, -0.25f});
+    CORRADE_COMPARE(a, (Vector3i{5, 3, 2}));
+    CORRADE_COMPARE(b, (Vector3{5.5f, 3.0f, 0.25f}));
+}
+
+void FunctionsCpp14Test::constexprLerp() {
+    constexpr Float a = Math::lerp(2.0f, 5.0f, 0.5f);
+    constexpr Int b = Math::lerp(2, 5, 0.5f);
+    constexpr Vector3 c = Math::lerp(Vector3{-1.0f, 2.0f, 3.0f}, Vector3{3.0f, -2.0f, 11.0f}, 0.25f);
+    constexpr Vector3i d = Math::lerp(Vector3i{0, 128, 64}, Vector3i{16, 0, 32}, 0.25f);
+    constexpr Vector3 e = Math::lerp(Vector3{-1.0f, 2.0f, 3.0f},
+                                     Vector3{3.0f, -2.0f, 11.0f},
+                                     Vector3{0.25f, 0.5f, 0.75f});
+    CORRADE_COMPARE(a, 3.5f);
+    CORRADE_COMPARE(b, 3);
+    CORRADE_COMPARE(c, (Vector3{0.0f, 1.0f, 5.0f}));
+    CORRADE_COMPARE(d, (Vector3i{4, 96, 56}));
+    CORRADE_COMPARE(e, (Vector3{0.0f, 0.0f, 9.0f}));
+}
+
+void FunctionsCpp14Test::constexprLerpBoolVector() {
+    constexpr Vector3i a = Math::lerp(Vector3i{1, 2, 3}, Vector3i{5, 6, 7}, BitVector<3>{5});
+    CORRADE_COMPARE(a, (Vector3i{5, 2, 7}));
+}
+
+void FunctionsCpp14Test::constexprLerpInverted() {
+    constexpr Float a = Math::lerpInverted(2.0f, 5.0f, 3.5f);
+    constexpr Vector3 b = Math::lerpInverted(Vector3{-1.0f, 2.0f, 3.0f},
+                                             Vector3{3.0f, -2.0f, 11.0f},
+                                             Vector3{0.0f, 0.0f, 9.0f});
+    CORRADE_COMPARE(a, 0.5f);
+    CORRADE_COMPARE(b, (Vector3{0.25f, 0.5f, 0.75f}));
+}
+
+void FunctionsCpp14Test::constexprReflect() {
+    constexpr Vector3 a = Math::reflect(Vector3{1.0f, 2.0f, 3.0f}, Vector3::yAxis());
+    CORRADE_COMPARE(a, (Vector3{1.0f, -2.0f, 3.0f}));
+}
+
+void FunctionsCpp14Test::constexprLerpBoolBitVector() {
+    /* Same condition as MAGNUM_BITVECTOR_SET_CONSTEXPR14 in BitVector.h */
+    #if defined(CORRADE_TARGET_GCC) && !defined(CORRADE_TARGET_CLANG) && __GNUC__*100 + __GNUC_MINOR__ < 602
+    CORRADE_SKIP("Constexpr BitVector::set() not supported by the compiler.");
+    #else
+    constexpr BitVector<3> a = Math::lerp(BitVector<3>{false}, BitVector<3>{true}, BitVector<3>{5});
+    constexpr BitVector<3> b = Math::lerp(BitVector<3>{5}, BitVector<3>{2}, BitVector<3>{3});
+    CORRADE_COMPARE(a, BitVector<3>{5});
+    CORRADE_COMPARE(b, BitVector<3>{6});
+    #endif
+}
 
 void FunctionsCpp14Test::constexprFmod() {
     #ifndef MAGNUM_HAS_CONSTEXPR_FMOD
