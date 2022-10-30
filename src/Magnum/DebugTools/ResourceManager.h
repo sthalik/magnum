@@ -39,14 +39,14 @@
 #include "Magnum/GL/GL.h"
 #include "Magnum/SceneGraph/SceneGraph.h"
 
-/** @todo fix this better */
-#ifdef CORRADE_TARGET_MSVC /* This is not a bug, this is a feature :( Not even /permissive- helps. */
+#include "Magnum/GL/MeshView.h"
 #include "Magnum/DebugTools/ForceRenderer.h"
 #include "Magnum/DebugTools/ObjectRenderer.h"
+/** @todo fix this better */
+#ifdef CORRADE_TARGET_MSVC /* This is not a bug, this is a feature :( Not even /permissive- helps. */
 #include "Magnum/GL/AbstractShaderProgram.h"
 #include "Magnum/GL/Buffer.h"
 #include "Magnum/GL/Mesh.h"
-#include "Magnum/GL/MeshView.h"
 #endif
 
 #ifdef MAGNUM_TARGET_GL
