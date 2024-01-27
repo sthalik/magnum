@@ -67,6 +67,10 @@ template<UnsignedInt dimensions, class T> struct DimensionTraits {
      * matrix type defined for one dimension and integral types.
      */
     typedef U MatrixType;
+    #else
+    typedef Math::Vector<dimensions, T> VectorType;
+    typedef Math::Range<dimensions, T> RangeType;
+    typedef Math::Matrix<dimensions, T> MatrixType;
     #endif
 };
 
