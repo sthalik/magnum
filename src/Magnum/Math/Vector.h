@@ -74,7 +74,7 @@ template<class T> constexpr typename std::enable_if<IsScalar<T>::value, T>::type
 namespace Implementation {
     template<std::size_t, class, class> struct VectorConverter;
     /* Needed by DualQuaternion and Functions.h (to avoid dependency between them) */
-    template<class T, class U> T lerp(const T& a, const T& b, U t) {
+    template<class T, class U> constexpr T lerp(const T& a, const T& b, U t) {
         /* While `t*(b - a) + a` is one ALU op less, the following is
            guaranteed to correctly preserves exact boundary values with t being
            0 or 1. See FunctionsTest::lerpLimits() for details. */
@@ -83,14 +83,15 @@ namespace Implementation {
 
     template<bool integral> struct IsZero;
     template<> struct IsZero<false> {
-        template<std::size_t size, class T> bool operator()(const Vector<size, T>& vec) const {
+        template<typename T> static constexpr T abs(T x) { return x < 0 ? -x : x; }
+        template<std::size_t size, class T> constexpr bool operator()(const Vector<size, T>& vec) const {
             /* Proper comparison should be with epsilon^2, but the value is not
                representable in given precision. Comparing to epsilon instead. */
-            return std::abs(vec.dot()) < TypeTraits<T>::epsilon();
+            return abs(vec.dot()) < TypeTraits<T>::epsilon();
         }
     };
     template<> struct IsZero<true> {
-        template<std::size_t size, class T> bool operator()(const Vector<size, T>& vec) const {
+        template<std::size_t size, class T> constexpr bool operator()(const Vector<size, T>& vec) const {
             return vec == Vector<size, T>{};
         }
     };
@@ -117,7 +118,7 @@ the same general direction, `1` when two *normalized* vectors are parallel,
     @ref cross(const Vector3<T>&, const Vector3<T>&),
     @ref cross(const Vector2<T>&, const Vector2<T>&)
 */
-template<std::size_t size, class T> inline T dot(const Vector<size, T>& a, const Vector<size, T>& b) {
+template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline T dot(const Vector<size, T>& a, const Vector<size, T>& b) {
     T out{};
     for(std::size_t i = 0; i != size; ++i)
         out += a._data[i]*b._data[i];
@@ -214,7 +215,7 @@ template<std::size_t size, class T> class Vector {
         constexpr explicit Vector(ZeroInitT) noexcept: _data{} {}
 
         /** @brief Construct a vector without initializing the contents */
-        explicit Vector(Magnum::NoInitT) noexcept {}
+        CORRADE_CONSTEXPR20 explicit Vector(Magnum::NoInitT) noexcept {}
 
         /** @brief Construct a vector from components */
         #ifdef DOXYGEN_GENERATING_OUTPUT
@@ -294,7 +295,7 @@ template<std::size_t size, class T> class Vector {
         T* data();
         constexpr const T* data() const; /**< @overload */
         #else
-        auto data() -> T(&)[size] { return _data; }
+        CORRADE_CONSTEXPR14 auto data() -> T(&)[size] { return _data; }
         constexpr auto data() const -> const T(&)[size] { return _data; }
         #endif
 
@@ -303,7 +304,7 @@ template<std::size_t size, class T> class Vector {
          *
          * @see @ref data()
          */
-        T& operator[](std::size_t pos) { return _data[pos]; }
+        CORRADE_CONSTEXPR14 T& operator[](std::size_t pos) { return _data[pos]; }
         constexpr T operator[](std::size_t pos) const { return _data[pos]; } /**< @overload */
 
         /**
@@ -311,7 +312,7 @@ template<std::size_t size, class T> class Vector {
          *
          * @see @ref Math::equal()
          */
-        bool operator==(const Vector<size, T>& other) const {
+        CORRADE_CONSTEXPR14 bool operator==(const Vector<size, T>& other) const {
             for(std::size_t i = 0; i != size; ++i)
                 if(!TypeTraits<T>::equals(_data[i], other._data[i])) return false;
 
@@ -323,7 +324,7 @@ template<std::size_t size, class T> class Vector {
          *
          * @see @ref Math::notEqual()
          */
-        bool operator!=(const Vector<size, T>& other) const {
+        CORRADE_CONSTEXPR14 bool operator!=(const Vector<size, T>& other) const {
             return !operator==(other);
         }
 
@@ -363,7 +364,7 @@ template<std::size_t size, class T> class Vector {
          * @f]
          * @see @ref dot(), @ref normalized()
          */
-        bool isZero() const {
+        constexpr bool isZero() const {
             return Implementation::IsZero<std::is_integral<T>::value>{}(*this);
         }
 
@@ -375,7 +376,7 @@ template<std::size_t size, class T> class Vector {
          * @f]
          * @see @ref dot(), @ref normalized()
          */
-        bool isNormalized() const {
+        constexpr bool isNormalized() const {
             return Implementation::isNormalizedSquared(dot());
         }
 
@@ -385,7 +386,7 @@ template<std::size_t size, class T> class Vector {
          *
          * Returns the value as-is.
          */
-        constexpr Vector<size, T> operator+() const { return *this; }
+        CORRADE_CONSTEXPR14 Vector<size, T> operator+() const { return *this; }
 
         /**
          * @brief Negated vector
@@ -411,7 +412,7 @@ template<std::size_t size, class T> class Vector {
          *      \boldsymbol a_i = \boldsymbol a_i + \boldsymbol b_i
          * @f]
          */
-        Vector<size, T>& operator+=(const Vector<size, T>& other) {
+        CORRADE_CONSTEXPR14 Vector<size, T>& operator+=(const Vector<size, T>& other) {
             for(std::size_t i = 0; i != size; ++i)
                 _data[i] += other._data[i];
 
@@ -434,7 +435,7 @@ template<std::size_t size, class T> class Vector {
          *      \boldsymbol a_i = \boldsymbol a_i - \boldsymbol b_i
          * @f]
          */
-        Vector<size, T>& operator-=(const Vector<size, T>& other) {
+        CORRADE_CONSTEXPR14 Vector<size, T>& operator-=(const Vector<size, T>& other) {
             for(std::size_t i = 0; i != size; ++i)
                 _data[i] -= other._data[i];
 
@@ -457,9 +458,9 @@ template<std::size_t size, class T> class Vector {
          *      \boldsymbol a_i = b \boldsymbol a_i
          * @f]
          * @see @ref operator*=(const Vector<size, T>&),
-         *      @ref operator*=(FloatingPoint)
+         *      @ref operator*=(Vector<size, Integral>&, FloatingPoint)
          */
-        Vector<size, T>& operator*=(T scalar) {
+        CORRADE_CONSTEXPR14 Vector<size, T>& operator*=(T scalar) {
             for(std::size_t i = 0; i != size; ++i)
                 _data[i] *= scalar;
 
@@ -502,7 +503,7 @@ template<std::size_t size, class T> class Vector {
         #ifdef DOXYGEN_GENERATING_OUTPUT
         template<class FloatingPoint> Vector<size, T>&
         #else
-        template<class FloatingPoint, class Integral = T> typename std::enable_if<std::is_integral<Integral>::value && std::is_floating_point<FloatingPoint>::value, Vector<size, T>&>::type
+        template<class FloatingPoint, class Integral = T> CORRADE_CONSTEXPR14 typename std::enable_if<std::is_integral<Integral>::value && std::is_floating_point<FloatingPoint>::value, Vector<size, T>&>::type
         #endif
         operator*=(FloatingPoint scalar) {
             for(std::size_t i = 0; i != size; ++i)
@@ -551,9 +552,9 @@ template<std::size_t size, class T> class Vector {
          *      \boldsymbol a_i = \frac{\boldsymbol a_i} b
          * @f]
          * @see @ref operator/=(const Vector<size, T>&),
-         *      @ref operator/=(FloatingPoint)
+         *      @ref operator/=(Vector<size, Integral>&, FloatingPoint)
          */
-        Vector<size, T>& operator/=(T scalar) {
+        CORRADE_CONSTEXPR14 Vector<size, T>& operator/=(T scalar) {
             for(std::size_t i = 0; i != size; ++i)
                 _data[i] /= scalar;
 
@@ -599,7 +600,7 @@ template<std::size_t size, class T> class Vector {
         #ifdef DOXYGEN_GENERATING_OUTPUT
         template<class FloatingPoint> Vector<size, Integral>&
         #else
-        template<class FloatingPoint, class Integral = T> typename std::enable_if<std::is_integral<Integral>::value && std::is_floating_point<FloatingPoint>::value, Vector<size, T>&>::type
+        template<class FloatingPoint, class Integral = T> CORRADE_CONSTEXPR14 typename std::enable_if<std::is_integral<Integral>::value && std::is_floating_point<FloatingPoint>::value, Vector<size, T>&>::type
         #endif
         operator/=(FloatingPoint scalar) {
             for(std::size_t i = 0; i != size; ++i)
@@ -630,9 +631,9 @@ template<std::size_t size, class T> class Vector {
          *      \boldsymbol a_i = \boldsymbol a_i \boldsymbol b_i
          * @f]
          * @see @ref operator*=(T),
-         *      @ref operator*=(const Vector<size, FloatingPoint>&)
+         *      @ref operator*=(Vector<size, Integral>&, const Vector<size, FloatingPoint>&)
          */
-        Vector<size, T>& operator*=(const Vector<size, T>& other) {
+        CORRADE_CONSTEXPR14 Vector<size, T>& operator*=(const Vector<size, T>& other) {
             for(std::size_t i = 0; i != size; ++i)
                 _data[i] *= other._data[i];
 
@@ -660,7 +661,7 @@ template<std::size_t size, class T> class Vector {
         #ifdef DOXYGEN_GENERATING_OUTPUT
         template<class FloatingPoint> Vector<size, T>&
         #else
-        template<class FloatingPoint, class Integral = T> typename std::enable_if<std::is_integral<Integral>::value && std::is_floating_point<FloatingPoint>::value, Vector<size, T>&>::type
+        template<class FloatingPoint, class Integral = T> CORRADE_CONSTEXPR14 typename std::enable_if<std::is_integral<Integral>::value && std::is_floating_point<FloatingPoint>::value, Vector<size, T>&>::type
         #endif
         operator*=(const Vector<size, FloatingPoint>& other) {
             for(std::size_t i = 0; i != size; ++i)
@@ -712,7 +713,7 @@ template<std::size_t size, class T> class Vector {
          * @see @ref operator/=(T),
          *      @ref operator/=(const Vector<size, FloatingPoint>&)
          */
-        Vector<size, T>& operator/=(const Vector<size, T>& other) {
+        CORRADE_CONSTEXPR14 Vector<size, T>& operator/=(const Vector<size, T>& other) {
             for(std::size_t i = 0; i != size; ++i)
                 _data[i] /= other._data[i];
 
@@ -739,7 +740,7 @@ template<std::size_t size, class T> class Vector {
         #ifdef DOXYGEN_GENERATING_OUTPUT
         template<class FloatingPoint> Vector<size, T>&
         #else
-        template<class FloatingPoint, class Integral = T> typename std::enable_if<std::is_integral<Integral>::value && std::is_floating_point<FloatingPoint>::value, Vector<size, T>&>::type
+        template<class FloatingPoint, class Integral = T> CORRADE_CONSTEXPR14 typename std::enable_if<std::is_integral<Integral>::value && std::is_floating_point<FloatingPoint>::value, Vector<size, T>&>::type
         #endif
         operator/=(const Vector<size, FloatingPoint>& other) {
             for(std::size_t i = 0; i != size; ++i)
@@ -773,7 +774,7 @@ template<std::size_t size, class T> class Vector {
         #ifdef DOXYGEN_GENERATING_OUTPUT
         Vector<size, T>&
         #else
-        template<class Integral = T> typename std::enable_if<std::is_integral<Integral>::value, Vector<size, T>&>::type
+        template<class Integral = T> CORRADE_CONSTEXPR14 typename std::enable_if<std::is_integral<Integral>::value, Vector<size, T>&>::type
         #endif
         operator%=(T scalar) {
             for(std::size_t i = 0; i != size; ++i)
@@ -804,7 +805,7 @@ template<std::size_t size, class T> class Vector {
         #ifdef DOXYGEN_GENERATING_OUTPUT
         Vector<size, T>&
         #else
-        template<class Integral = T> typename std::enable_if<std::is_integral<Integral>::value, Vector<size, T>&>::type
+        template<class Integral = T> CORRADE_CONSTEXPR14 typename std::enable_if<std::is_integral<Integral>::value, Vector<size, T>&>::type
         #endif
         operator%=(const Vector<size, T>& other) {
             for(std::size_t i = 0; i != size; ++i)
@@ -849,7 +850,7 @@ template<std::size_t size, class T> class Vector {
         #ifdef DOXYGEN_GENERATING_OUTPUT
         Vector<size, T>&
         #else
-        template<class Integral = T> typename std::enable_if<std::is_integral<Integral>::value, Vector<size, T>&>::type
+        template<class Integral = T> CORRADE_CONSTEXPR14 typename std::enable_if<std::is_integral<Integral>::value, Vector<size, T>&>::type
         #endif
         operator&=(const Vector<size, T>& other) {
             for(std::size_t i = 0; i != size; ++i)
@@ -880,7 +881,7 @@ template<std::size_t size, class T> class Vector {
         #ifdef DOXYGEN_GENERATING_OUTPUT
         Vector<size, T>&
         #else
-        template<class Integral = T> typename std::enable_if<std::is_integral<Integral>::value, Vector<size, T>&>::type
+        template<class Integral = T> CORRADE_CONSTEXPR14 typename std::enable_if<std::is_integral<Integral>::value, Vector<size, T>&>::type
         #endif
         operator|=(const Vector<size, T>& other) {
             for(std::size_t i = 0; i != size; ++i)
@@ -911,7 +912,7 @@ template<std::size_t size, class T> class Vector {
         #ifdef DOXYGEN_GENERATING_OUTPUT
         Vector<size, T>&
         #else
-        template<class Integral = T> typename std::enable_if<std::is_integral<Integral>::value, Vector<size, T>&>::type
+        template<class Integral = T> CORRADE_CONSTEXPR14 typename std::enable_if<std::is_integral<Integral>::value, Vector<size, T>&>::type
         #endif
         operator^=(const Vector<size, T>& other) {
             for(std::size_t i = 0; i != size; ++i)
@@ -942,7 +943,7 @@ template<std::size_t size, class T> class Vector {
         #ifdef DOXYGEN_GENERATING_OUTPUT
         Vector<size, T>& operator<<=(T shift)
         #else
-        template<class Integral = T> typename std::enable_if<std::is_integral<Integral>::value, Vector<size, T>&>::type operator<<=(typename std::common_type<T>::type shift)
+        template<class Integral = T> CORRADE_CONSTEXPR14 typename std::enable_if<std::is_integral<Integral>::value, Vector<size, T>&>::type operator<<=(typename std::common_type<T>::type shift)
         #endif
         {
             for(std::size_t i = 0; i != size; ++i)
@@ -974,7 +975,7 @@ template<std::size_t size, class T> class Vector {
         #ifdef DOXYGEN_GENERATING_OUTPUT
         Vector<size, T>& operator>>=(T shift)
         #else
-        template<class Integral = T> typename std::enable_if<std::is_integral<Integral>::value, Vector<size, T>&>::type operator>>=(typename std::common_type<T>::type shift)
+        template<class Integral = T> CORRADE_CONSTEXPR14 typename std::enable_if<std::is_integral<Integral>::value, Vector<size, T>&>::type operator>>=(typename std::common_type<T>::type shift)
         #endif
         {
             for(std::size_t i = 0; i != size; ++i)
@@ -1009,7 +1010,7 @@ template<std::size_t size, class T> class Vector {
          *      @ref isNormalized(), @ref Distance::pointPointSquared(),
          *      @ref Intersection::pointSphere()
          */
-        T dot() const { return Math::dot(*this, *this); }
+        CORRADE_CONSTEXPR14 T dot() const { return Math::dot(*this, *this); }
 
         /**
          * @brief Vector length
@@ -1036,7 +1037,14 @@ template<std::size_t size, class T> class Vector {
          *      @ref Intersection::pointSphere()
          * @todo something like std::hypot() for possibly better precision?
          */
-        T length() const { return T(std::sqrt(dot())); }
+        MAGNUM_CONSTEXPR_SQRT T length() const {
+            auto x = dot();
+#ifdef MAGNUM_HAS_CONSTEXPR_SQRT
+            if (CORRADE_CONSTEVAL)
+                return T(ConstantMath::sqrt(x));
+#endif
+            return T(std::sqrt(x));
+        }
 
         /**
          * @brief Inverse vector length
@@ -1050,7 +1058,7 @@ template<std::size_t size, class T> class Vector {
         #ifdef DOXYGEN_GENERATING_OUTPUT
         T
         #else
-        template<class U = T> typename std::enable_if<std::is_floating_point<U>::value, T>::type
+        template<class U = T> CORRADE_CONSTEXPR14 typename std::enable_if<std::is_floating_point<U>::value, T>::type
         #endif
         lengthInverted() const { return T(1)/length(); }
 
@@ -1064,7 +1072,7 @@ template<std::size_t size, class T> class Vector {
         #ifdef DOXYGEN_GENERATING_OUTPUT
         Vector<size, T>
         #else
-        template<class U = T> typename std::enable_if<std::is_floating_point<U>::value, Vector<size, T>>::type
+        template<class U = T> CORRADE_CONSTEXPR14 typename std::enable_if<std::is_floating_point<U>::value, Vector<size, T>>::type
         #endif
         normalized() const { return *this*lengthInverted(); }
 
@@ -1082,7 +1090,7 @@ template<std::size_t size, class T> class Vector {
         #ifdef DOXYGEN_GENERATING_OUTPUT
         Vector<size, T>
         #else
-        template<class U = T> typename std::enable_if<std::is_floating_point<U>::value, Vector<size, T>>::type
+        template<class U = T> CORRADE_CONSTEXPR14 typename std::enable_if<std::is_floating_point<U>::value, Vector<size, T>>::type
         #endif
         resized(T length) const {
             return *this*(lengthInverted()*length);
@@ -1100,7 +1108,7 @@ template<std::size_t size, class T> class Vector {
         #ifdef DOXYGEN_GENERATING_OUTPUT
         Vector<size, T>
         #else
-        template<class U = T> typename std::enable_if<std::is_floating_point<U>::value, Vector<size, T>>::type
+        template<class U = T> CORRADE_CONSTEXPR14 typename std::enable_if<std::is_floating_point<U>::value, Vector<size, T>>::type
         #endif
         projected(const Vector<size, T>& line) const {
             return line*Math::dot(*this, line)/line.dot();
@@ -1119,7 +1127,7 @@ template<std::size_t size, class T> class Vector {
         #ifdef DOXYGEN_GENERATING_OUTPUT
         Vector<size, T>
         #else
-        template<class U = T> typename std::enable_if<std::is_floating_point<U>::value, Vector<size, T>>::type
+        template<class U = T> CORRADE_CONSTEXPR14 typename std::enable_if<std::is_floating_point<U>::value, Vector<size, T>>::type
         #endif
         projectedOntoNormalized(const Vector<size, T>& line) const;
 
@@ -1141,14 +1149,14 @@ template<std::size_t size, class T> class Vector {
          *
          * @see @ref operator+(), @ref length()
          */
-        T sum() const;
+        CORRADE_CONSTEXPR14 T sum() const;
 
         /**
          * @brief Product of values in the vector
          *
          * @see @ref operator*(const Vector<size, T>&) const
          */
-        T product() const;
+        CORRADE_CONSTEXPR14 T product() const;
 
         /**
          * @brief Minimal value in the vector
@@ -1156,7 +1164,7 @@ template<std::size_t size, class T> class Vector {
          * <em>NaN</em>s are ignored, unless the vector is all <em>NaN</em>s.
          * @see @ref Math::min(), @ref minmax(), @ref Math::isNan()
          */
-        T min() const;
+        CORRADE_CONSTEXPR14 T min() const;
 
         /**
          * @brief Maximal value in the vector
@@ -1164,7 +1172,7 @@ template<std::size_t size, class T> class Vector {
          * <em>NaN</em>s are ignored, unless the vector is all <em>NaN</em>s.
          * @see @ref Math::max(), @ref minmax(), @ref Math::isNan()
          */
-        T max() const;
+        CORRADE_CONSTEXPR14 T max() const;
 
         /**
          * @brief Minimal and maximal value in the vector
@@ -1172,7 +1180,7 @@ template<std::size_t size, class T> class Vector {
          * <em>NaN</em>s are ignored, unless the vector is all <em>NaN</em>s.
          * @see @ref min(), @ref max(), @ref Math::minmax(), @ref Math::isNan()
          */
-        Containers::Pair<T, T> minmax() const;
+        CORRADE_CONSTEXPR14 Containers::Pair<T, T> minmax() const;
 
     #ifndef DOXYGEN_GENERATING_OUTPUT
     protected:
@@ -1284,7 +1292,7 @@ template<std::size_t size, class T> class Vector {
         template<std::size_t size_, class T_> friend BitVector<size_> equal(const Vector<size_, T_>&, const Vector<size_, T_>&);
         template<std::size_t size_, class T_> friend BitVector<size_> notEqual(const Vector<size_, T_>&, const Vector<size_, T_>&);
 
-        template<std::size_t size_, class U> friend U dot(const Vector<size_, U>&, const Vector<size_, U>&);
+        template<std::size_t size_, class U> friend CORRADE_CONSTEXPR14 U dot(const Vector<size_, U>&, const Vector<size_, U>&);
 
         /* Implementation for Vector<size, T>::Vector(const T(&data)[size_]) */
         template<std::size_t ...sequence> constexpr explicit Vector(Containers::Implementation::Sequence<sequence...>, const T(&data)[sizeof...(sequence)]) noexcept: _data{data[sequence]...} {}
@@ -1398,14 +1406,14 @@ extern template MAGNUM_EXPORT Debug& operator<<(Debug&, const Vector<4, Double>&
     operator-() const {                                                     \
         return Math::Vector<size, T>::negateInternal(typename Containers::Implementation::GenerateSequence<size>::Type{}); \
     }                                                                       \
-    Type_<T>& operator+=(const Math::Vector<size, T>& other) {              \
+    CORRADE_CONSTEXPR14 Type_<T>& operator+=(const Math::Vector<size, T>& other) {              \
         Math::Vector<size, T>::operator+=(other);                           \
         return *this;                                                       \
     }                                                                       \
     constexpr Type_<T> operator+(const Math::Vector<size, T>& other) const { \
         return Math::Vector<size, T>::addInternal(other, typename Containers::Implementation::GenerateSequence<size>::Type{}); \
     }                                                                       \
-    Type_<T>& operator-=(const Math::Vector<size, T>& other) {              \
+    CORRADE_CONSTEXPR14 Type_<T>& operator-=(const Math::Vector<size, T>& other) {              \
         Math::Vector<size, T>::operator-=(other);                           \
         return *this;                                                       \
     }                                                                       \
@@ -1413,7 +1421,7 @@ extern template MAGNUM_EXPORT Debug& operator<<(Debug&, const Vector<4, Double>&
         return Math::Vector<size, T>::subtractInternal(other, typename Containers::Implementation::GenerateSequence<size>::Type{}); \
     }                                                                       \
                                                                             \
-    Type_<T>& operator*=(T scalar) {                                        \
+    CORRADE_CONSTEXPR14 Type_<T>& operator*=(T scalar) {                                        \
         Math::Vector<size, T>::operator*=(scalar);                          \
         return *this;                                                       \
     }                                                                       \
@@ -1423,7 +1431,7 @@ extern template MAGNUM_EXPORT Debug& operator<<(Debug&, const Vector<4, Double>&
     friend constexpr Type_<T> operator*(typename std::common_type<T>::type scalar, const Type_<T>& vector) { \
         return scalar*static_cast<const Math::Vector<size, T>&>(vector);    \
     }                                                                       \
-    template<class FloatingPoint, class Integral = T> typename std::enable_if<std::is_integral<Integral>::value && std::is_floating_point<FloatingPoint>::value, Type_<T>&>::type operator*=(FloatingPoint scalar) { \
+    template<class FloatingPoint, class Integral = T> CORRADE_CONSTEXPR14 typename std::enable_if<std::is_integral<Integral>::value && std::is_floating_point<FloatingPoint>::value, Type_<T>&>::type operator*=(FloatingPoint scalar) { \
         Math::Vector<size, T>::operator*=(scalar);                          \
         return *this;                                                       \
     }                                                                       \
@@ -1434,7 +1442,7 @@ extern template MAGNUM_EXPORT Debug& operator<<(Debug&, const Vector<4, Double>&
         return scalar*static_cast<const Math::Vector<size, T>&>(vector);    \
     }                                                                       \
                                                                             \
-    Type_<T>& operator/=(T scalar) {                                        \
+    CORRADE_CONSTEXPR14 Type_<T>& operator/=(T scalar) {                                        \
         Math::Vector<size, T>::operator/=(scalar);                          \
         return *this;                                                       \
     }                                                                       \
@@ -1444,7 +1452,7 @@ extern template MAGNUM_EXPORT Debug& operator<<(Debug&, const Vector<4, Double>&
     friend constexpr Type_<T> operator/(typename std::common_type<T>::type scalar, const Type_<T>& vector) { \
         return scalar/static_cast<const Math::Vector<size, T>&>(vector);    \
     }                                                                       \
-    template<class FloatingPoint, class Integral = T> typename std::enable_if<std::is_integral<Integral>::value && std::is_floating_point<FloatingPoint>::value, Type_<T>&>::type operator/=(FloatingPoint scalar) { \
+    template<class FloatingPoint, class Integral = T> CORRADE_CONSTEXPR14 typename std::enable_if<std::is_integral<Integral>::value && std::is_floating_point<FloatingPoint>::value, Type_<T>&>::type operator/=(FloatingPoint scalar) { \
         Math::Vector<size, T>::operator/=(scalar);                          \
         return *this;                                                       \
     }                                                                       \
@@ -1452,14 +1460,14 @@ extern template MAGNUM_EXPORT Debug& operator<<(Debug&, const Vector<4, Double>&
         return Math::Vector<size, T>::divideIntegerInternal(scalar, typename Containers::Implementation::GenerateSequence<size>::Type{}); \
     }                                                                       \
                                                                             \
-    Type_<T>& operator*=(const Math::Vector<size, T>& other) {              \
+    CORRADE_CONSTEXPR14 Type_<T>& operator*=(const Math::Vector<size, T>& other) {              \
         Math::Vector<size, T>::operator*=(other);                           \
         return *this;                                                       \
     }                                                                       \
     constexpr Type_<T> operator*(const Math::Vector<size, T>& other) const { \
         return Math::Vector<size, T>::multiplyInternal(other, typename Containers::Implementation::GenerateSequence<size>::Type{}); \
     }                                                                       \
-    template<class FloatingPoint, class Integral = T> typename std::enable_if<std::is_integral<Integral>::value && std::is_floating_point<FloatingPoint>::value, Type_<T>&>::type operator*=(const Math::Vector<size, FloatingPoint>& other) { \
+    template<class FloatingPoint, class Integral = T> CORRADE_CONSTEXPR14 typename std::enable_if<std::is_integral<Integral>::value && std::is_floating_point<FloatingPoint>::value, Type_<T>&>::type operator*=(const Math::Vector<size, FloatingPoint>& other) { \
         Math::Vector<size, T>::operator*=(other);                           \
         return *this;                                                       \
     }                                                                       \
@@ -1470,7 +1478,7 @@ extern template MAGNUM_EXPORT Debug& operator<<(Debug&, const Vector<4, Double>&
         return other**this;                                                 \
     }                                                                       \
                                                                             \
-    Type_<T>& operator/=(const Math::Vector<size, T>& other) {              \
+    CORRADE_CONSTEXPR14 Type_<T>& operator/=(const Math::Vector<size, T>& other) {              \
         Math::Vector<size, T>::operator/=(other);                           \
         return *this;                                                       \
     }                                                                       \
@@ -1503,35 +1511,35 @@ extern template MAGNUM_EXPORT Debug& operator<<(Debug&, const Vector<4, Double>&
     template<class Integral = T> constexpr typename std::enable_if<std::is_integral<Integral>::value, Type_<T>>::type operator~() const { \
         return Math::Vector<size, T>::invertInternal(typename Containers::Implementation::GenerateSequence<size>::Type{}); \
     }                                                                       \
-    template<class Integral = T> typename std::enable_if<std::is_integral<Integral>::value, Type_<T>&>::type operator&=(const Math::Vector<size, T>& other) { \
+    template<class Integral = T> CORRADE_CONSTEXPR14 typename std::enable_if<std::is_integral<Integral>::value, Type_<T>&>::type operator&=(const Math::Vector<size, T>& other) { \
         Math::Vector<size, T>::operator&=(other);                           \
         return *this;                                                       \
     }                                                                       \
     template<class Integral = T> constexpr typename std::enable_if<std::is_integral<Integral>::value, Type_<T>>::type operator&(const Math::Vector<size, T>& other) const { \
         return Math::Vector<size, T>::andInternal(other, typename Containers::Implementation::GenerateSequence<size>::Type{}); \
     }                                                                       \
-    template<class Integral = T> typename std::enable_if<std::is_integral<Integral>::value, Type_<T>&>::type operator|=(const Math::Vector<size, T>& other) { \
+    template<class Integral = T> CORRADE_CONSTEXPR14 typename std::enable_if<std::is_integral<Integral>::value, Type_<T>&>::type operator|=(const Math::Vector<size, T>& other) { \
         Math::Vector<size, T>::operator|=(other);                           \
         return *this;                                                       \
     }                                                                       \
     template<class Integral = T> constexpr typename std::enable_if<std::is_integral<Integral>::value, Type_<T>>::type operator|(const Math::Vector<size, T>& other) const { \
         return Math::Vector<size, T>::orInternal(other, typename Containers::Implementation::GenerateSequence<size>::Type{}); \
     }                                                                       \
-    template<class Integral = T> typename std::enable_if<std::is_integral<Integral>::value, Type_<T>&>::type operator^=(const Math::Vector<size, T>& other) { \
+    template<class Integral = T> CORRADE_CONSTEXPR14 typename std::enable_if<std::is_integral<Integral>::value, Type_<T>&>::type operator^=(const Math::Vector<size, T>& other) { \
         Math::Vector<size, T>::operator^=(other);                           \
         return *this;                                                       \
     }                                                                       \
     template<class Integral = T> constexpr typename std::enable_if<std::is_integral<Integral>::value, Type_<T>>::type operator^(const Math::Vector<size, T>& other) const { \
         return Math::Vector<size, T>::xorInternal(other, typename Containers::Implementation::GenerateSequence<size>::Type{}); \
     }                                                                       \
-    template<class Integral = T> typename std::enable_if<std::is_integral<Integral>::value, Type_<T>&>::type operator<<=(typename std::common_type<T>::type shift) { \
+    template<class Integral = T> CORRADE_CONSTEXPR14 typename std::enable_if<std::is_integral<Integral>::value, Type_<T>&>::type operator<<=(typename std::common_type<T>::type shift) { \
         Math::Vector<size, T>::operator<<=(shift);                          \
         return *this;                                                       \
     }                                                                       \
     template<class Integral = T> constexpr typename std::enable_if<std::is_integral<Integral>::value, Type_<T>>::type operator<<(typename std::common_type<T>::type shift) const { \
         return Math::Vector<size, T>::shiftLeftInternal(shift, typename Containers::Implementation::GenerateSequence<size>::Type{}); \
     }                                                                       \
-    template<class Integral = T> typename std::enable_if<std::is_integral<Integral>::value, Type_<T>&>::type operator>>=(typename std::common_type<T>::type shift) { \
+    template<class Integral = T> CORRADE_CONSTEXPR14 typename std::enable_if<std::is_integral<Integral>::value, Type_<T>&>::type operator>>=(typename std::common_type<T>::type shift) { \
         Math::Vector<size, T>::operator>>=(shift);                          \
         return *this;                                                       \
     }                                                                       \
@@ -1539,16 +1547,16 @@ extern template MAGNUM_EXPORT Debug& operator<<(Debug&, const Vector<4, Double>&
         return Math::Vector<size, T>::shiftRightInternal(shift, typename Containers::Implementation::GenerateSequence<size>::Type{}); \
     }                                                                       \
                                                                             \
-    template<class U = T> typename std::enable_if<std::is_floating_point<U>::value, Type_<T>>::type normalized() const { \
+    template<class U = T> CORRADE_CONSTEXPR14 typename std::enable_if<std::is_floating_point<U>::value, Type_<T>>::type normalized() const { \
         return Math::Vector<size, T>::normalized();                         \
     }                                                                       \
-    template<class U = T> typename std::enable_if<std::is_floating_point<U>::value, Type_<T>>::type resized(T length) const { \
+    template<class U = T> CORRADE_CONSTEXPR14 typename std::enable_if<std::is_floating_point<U>::value, Type_<T>>::type resized(T length) const { \
         return Math::Vector<size, T>::resized(length);                      \
     }                                                                       \
-    template<class U = T> typename std::enable_if<std::is_floating_point<U>::value, Type_<T>>::type projected(const Math::Vector<size, T>& other) const { \
+    template<class U = T> CORRADE_CONSTEXPR14 typename std::enable_if<std::is_floating_point<U>::value, Type_<T>>::type projected(const Math::Vector<size, T>& other) const { \
         return Math::Vector<size, T>::projected(other);                     \
     }                                                                       \
-    template<class U = T> typename std::enable_if<std::is_floating_point<U>::value, Type_<T>>::type projectedOntoNormalized(const Math::Vector<size, T>& other) const { \
+    template<class U = T> CORRADE_CONSTEXPR14 typename std::enable_if<std::is_floating_point<U>::value, Type_<T>>::type projectedOntoNormalized(const Math::Vector<size, T>& other) const { \
         return Math::Vector<size, T>::projectedOntoNormalized(other);       \
     }                                                                       \
     constexpr Type_<T> flipped() const {                                    \
@@ -1616,7 +1624,7 @@ template<std::size_t size, class T>
 #ifdef DOXYGEN_GENERATING_OUTPUT
 inline Vector<size, T>
 #else
-template<class U> inline typename std::enable_if<std::is_floating_point<U>::value, Vector<size, T>>::type
+template<class U> CORRADE_CONSTEXPR14 inline typename std::enable_if<std::is_floating_point<U>::value, Vector<size, T>>::type
 #endif
 Vector<size, T>::projectedOntoNormalized(const Vector<size, T>& line) const {
     CORRADE_DEBUG_ASSERT(line.isNormalized(),
@@ -1624,7 +1632,7 @@ Vector<size, T>::projectedOntoNormalized(const Vector<size, T>& line) const {
     return line*Math::dot(*this, line);
 }
 
-template<std::size_t size, class T> inline T Vector<size, T>::sum() const {
+template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline T Vector<size, T>::sum() const {
     T out(_data[0]);
 
     for(std::size_t i = 1; i != size; ++i)
@@ -1633,7 +1641,7 @@ template<std::size_t size, class T> inline T Vector<size, T>::sum() const {
     return out;
 }
 
-template<std::size_t size, class T> inline T Vector<size, T>::product() const {
+template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline T Vector<size, T>::product() const {
     T out(_data[0]);
 
     for(std::size_t i = 1; i != size; ++i)
@@ -1658,7 +1666,7 @@ namespace Implementation {
     }
 }
 
-template<std::size_t size, class T> inline T Vector<size, T>::min() const {
+template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline T Vector<size, T>::min() const {
     std::size_t i = Implementation::firstNonNan(_data, IsFloatingPoint<T>{});
     T out(_data[i]);
 
@@ -1668,7 +1676,7 @@ template<std::size_t size, class T> inline T Vector<size, T>::min() const {
     return out;
 }
 
-template<std::size_t size, class T> inline T Vector<size, T>::max() const {
+template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline T Vector<size, T>::max() const {
     std::size_t i = Implementation::firstNonNan(_data, IsFloatingPoint<T>{});
     T out(_data[i]);
 
@@ -1678,7 +1686,7 @@ template<std::size_t size, class T> inline T Vector<size, T>::max() const {
     return out;
 }
 
-template<std::size_t size, class T> inline Containers::Pair<T, T> Vector<size, T>::minmax() const {
+template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline Containers::Pair<T, T> Vector<size, T>::minmax() const {
     std::size_t i = Implementation::firstNonNan(_data, IsFloatingPoint<T>{});
     T min{_data[i]}, max{_data[i]};
 

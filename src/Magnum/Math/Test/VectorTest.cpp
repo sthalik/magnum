@@ -34,6 +34,8 @@
 #include "Magnum/Math/Vector.h"
 #include "Magnum/Math/StrictWeakOrdering.h"
 
+#include "Cpp14VectorTest.h"
+
 struct Vec3 {
     float x, y, z;
 };
@@ -59,6 +61,7 @@ namespace Test { namespace {
 struct VectorTest: TestSuite::Tester {
     explicit VectorTest();
 
+#ifndef SKIP_TESTING
     void construct();
     void constructFromData();
     void constructPad();
@@ -124,6 +127,9 @@ struct VectorTest: TestSuite::Tester {
     void debug();
     void debugPacked();
     void debugPropagateFlags();
+#else
+    void skipTesting();
+#endif
 };
 
 /* What's a typedef and not a using differs from the typedefs in root Magnum
@@ -141,7 +147,14 @@ typedef Vector<2, Int> Vector2i;
 using namespace Literals;
 
 VectorTest::VectorTest() {
-    addTests({&VectorTest::construct,
+#ifndef TESTING_CONSTEXPR
+    setTestName("MathVectorTest");
+#else
+    setTestName("Cpp14MathVectorTest");
+#endif
+    addTests({
+#ifndef SKIP_TESTING
+              &VectorTest::construct,
               &VectorTest::constructFromData,
               &VectorTest::constructPad,
               &VectorTest::constructPadDefaultHalf,
@@ -205,9 +218,14 @@ VectorTest::VectorTest() {
 
               &VectorTest::debug,
               &VectorTest::debugPacked,
-              &VectorTest::debugPropagateFlags});
+              &VectorTest::debugPropagateFlags
+#else
+              &VectorTest::skipTesting
+#endif
+    });
 }
 
+#ifndef SKIP_TESTING
 void VectorTest::construct() {
     constexpr Vector4 a = {1.0f, 2.0f, -3.0f, 4.5f};
     CORRADE_COMPARE(a, Vector4(1.0f, 2.0f, -3.0f, 4.5f));
@@ -468,9 +486,9 @@ void VectorTest::compareComponentWise() {
     typedef BitVector<3> BitVector3;
     typedef BitVector<4> BitVector4;
 
-    Vector4 a{1.0f, -3.5f, 5.0f, -10.0f};
-    Vector4 b{1.0f + TypeTraits<Float>::epsilon()/2, -3.5f, 5.0f - TypeTraits<Float>::epsilon()*2, -10.0f};
-    Vector4 c{1.0f + TypeTraits<Float>::epsilon()*2, -3.5f, 5.0f - TypeTraits<Float>::epsilon()*10, -10.0f};
+    CE const Vector4 a{1.0f, -3.5f, 5.0f, -10.0f};
+    CE const Vector4 b{1.0f + TypeTraits<Float>::epsilon()/2, -3.5f, 5.0f - TypeTraits<Float>::epsilon()*2, -10.0f};
+    CE const Vector4 c{1.0f + TypeTraits<Float>::epsilon()*2, -3.5f, 5.0f - TypeTraits<Float>::epsilon()*10, -10.0f};
     CORRADE_COMPARE(equal(a, b), BitVector4{0xf});
     CORRADE_COMPARE(equal(a, c), BitVector4{0xa});
     CORRADE_COMPARE(notEqual(a, b), BitVector4{0x0});
@@ -496,9 +514,9 @@ void VectorTest::promotedNegated() {
 }
 
 void VectorTest::addSubtract() {
-    const Vector4 a{1.0f, -3.0f, 5.0f, -10.0f};
-    const Vector4 b{7.5f, 33.0f, -15.0f, 0.0f};
-    const Vector4 c{8.5f, 30.0f, -10.0f, -10.0f};
+    CE const Vector4 a(1.0f, -3.0f, 5.0f, -10.0f);
+    CE const Vector4 b(7.5f, 33.0f, -15.0f, 0.0f);
+    CE const Vector4 c(8.5f, 30.0f, -10.0f, -10.0f);
 
     CORRADE_COMPARE(a + b, c);
     CORRADE_COMPARE(c - b, a);
@@ -523,8 +541,8 @@ void VectorTest::addSubtract() {
 }
 
 void VectorTest::multiplyDivide() {
-    const Vector4 vector{1.0f, 2.0f, 3.0f, 4.0f};
-    const Vector4 multiplied{-1.5f, -3.0f, -4.5f, -6.0f};
+    CE const Vector4 vector(1.0f, 2.0f, 3.0f, 4.0f);
+    CE const Vector4 multiplied(-1.5f, -3.0f, -4.5f, -6.0f);
 
     CORRADE_COMPARE(vector*-1.5f, multiplied);
     CORRADE_COMPARE(-1.5f*vector, multiplied);
@@ -562,8 +580,8 @@ void VectorTest::multiplyDivide() {
 }
 
 void VectorTest::multiplyDivideIntegral() {
-    const Vector4i vector{32, 10, -6, 2};
-    const Vector4i multiplied{-48, -15, 9, -3};
+    CE const Vector4i vector(32, 10, -6, 2);
+    CE const Vector4i multiplied(-48, -15, 9, -3);
 
     CORRADE_COMPARE(vector*-1.5f, multiplied);
     CORRADE_COMPARE(-1.5f*vector, multiplied);
@@ -594,9 +612,9 @@ void VectorTest::multiplyDivideIntegral() {
 }
 
 void VectorTest::multiplyDivideComponentWise() {
-    const Vector4 vec{1.0f, 2.0f, 3.0f, 4.0f};
-    const Vector4 multiplier{7.0f, -4.0f, -1.5f, 1.0f};
-    const Vector4 multiplied{7.0f, -8.0f, -4.5f, 4.0f};
+    CE const Vector4 vec(1.0f, 2.0f, 3.0f, 4.0f);
+    CE const Vector4 multiplier(7.0f, -4.0f, -1.5f, 1.0f);
+    CE const Vector4 multiplied(7.0f, -8.0f, -4.5f, 4.0f);
 
     CORRADE_COMPARE(vec*multiplier, multiplied);
     {
@@ -622,9 +640,9 @@ void VectorTest::multiplyDivideComponentWise() {
 }
 
 void VectorTest::multiplyDivideComponentWiseIntegral() {
-    const Vector4i vec{7, 2, -16, -1};
-    const Vector4 multiplier{2.0f, -1.5f, 0.5f, 10.0f};
-    const Vector4i multiplied{14, -3, -8, -10};
+    CE const Vector4i vec(7, 2, -16, -1);
+    CE const Vector4 multiplier(2.0f, -1.5f, 0.5f, 10.0f);
+    CE const Vector4i multiplied(14, -3, -8, -10);
 
     CORRADE_COMPARE(vec*multiplier, multiplied);
     CORRADE_COMPARE(multiplier*vec, multiplied);
@@ -749,11 +767,13 @@ void VectorTest::dotSelf() {
 }
 
 void VectorTest::length() {
-    CORRADE_COMPARE(Vector4(1.0f, 2.0f, 3.0f, 4.0f).length(), 5.4772256f);
+    CE const Vector4 a(1.0f, 2.0f, 3.0f, 4.0f);
+    CORRADE_COMPARE(a.length(), 5.4772256f);
 }
 
 void VectorTest::lengthInverted() {
-    CORRADE_COMPARE(Vector4(1.0f, 2.0f, 3.0f, 4.0f).lengthInverted(), 0.182574f);
+    CE const Vector4 a(1.0f, 2.0f, 3.0f, 4.0f);
+    CORRADE_COMPARE(a.lengthInverted(), 0.182574f);
 }
 
 void VectorTest::normalized() {
@@ -787,7 +807,7 @@ void VectorTest::max() {
 }
 
 void VectorTest::minmax() {
-    const auto expected = Containers::pair(-3.0f, 2.0f);
+    CE const auto expected = Containers::pair(-3.0f, 2.0f);
     CORRADE_COMPARE((Vector3{-1.0f, 2.0f, -3.0f}.minmax()), expected);
     CORRADE_COMPARE((Vector3{-1.0f, -3.0f, 2.0f}.minmax()), expected);
     CORRADE_COMPARE((Vector3{2.0f, -1.0f, -3.0f}.minmax()), expected);
@@ -797,9 +817,9 @@ void VectorTest::minmax() {
 }
 
 void VectorTest::nanIgnoring() {
-    Vector3 oneNan{1.0f, Constants::nan(), -3.0f};
-    Vector3 firstNan{Constants::nan(), 1.0f, -3.0f};
-    Vector3 allNan{Constants::nan(), Constants::nan(), Constants::nan()};
+    CE Vector3 oneNan{1.0f, Constants::nan(), -3.0f};
+    CE Vector3 firstNan{Constants::nan(), 1.0f, -3.0f};
+    CE Vector3 allNan{Constants::nan(), Constants::nan(), Constants::nan()};
 
     CORRADE_COMPARE(oneNan.min(), -3.0f);
     CORRADE_COMPARE(firstNan.min(), -3.0f);
@@ -817,16 +837,16 @@ void VectorTest::nanIgnoring() {
 }
 
 void VectorTest::projected() {
-    Vector3 line(1.0f, -1.0f, 0.5f);
-    Vector3 projected = Vector3(1.0f, 2.0f, 3.0f).projected(line);
+    CE Vector3 line(1.0f, -1.0f, 0.5f);
+    CE Vector3 projected = Vector3(1.0f, 2.0f, 3.0f).projected(line);
 
     CORRADE_COMPARE(projected, Vector3(0.222222f, -0.222222f, 0.111111f));
     CORRADE_COMPARE(projected.normalized(), line.normalized());
 }
 
 void VectorTest::projectedOntoNormalized() {
-    Vector3 vector(1.0f, 2.0f, 3.0f);
-    Vector3 line(1.0f, -1.0f, 0.5f);
+    CE Vector3 vector(1.0f, 2.0f, 3.0f);
+    CE Vector3 line(1.0f, -1.0f, 0.5f);
 
     Vector3 projected = vector.projectedOntoNormalized(line.normalized());
     CORRADE_COMPARE(projected, Vector3(0.222222f, -0.222222f, 0.111111f));
@@ -872,7 +892,7 @@ void VectorTest::angleNormalizedButOver1() {
     /* This vector *is* normalized, but its length is larger than 1, which
        would cause acos() to return a NaN. Ensure it's clamped to correct range
        before passing it there. */
-    Vector3 a{1.0f + Math::TypeTraits<Float>::epsilon()/2,  0.0f, 0.0f};
+    CE Vector3 a{1.0f + Math::TypeTraits<Float>::epsilon()/2,  0.0f, 0.0f};
     CORRADE_VERIFY(a.isNormalized());
 
     CORRADE_COMPARE(Math::angle(a, a), 0.0_radf);
@@ -912,12 +932,12 @@ void VectorTest::subclassTypes() {
     CORRADE_VERIFY(std::is_same<decltype(Vec2::from(data)), Vec2&>::value);
     CORRADE_VERIFY(std::is_same<decltype(Vec2::from(cdata)), const Vec2&>::value);
 
-    Vector<1, Float> one;
+    CE Vector<1, Float> one;
     CORRADE_VERIFY(std::is_same<decltype(Vec2::pad(one)), Vec2>::value);
 
     /* Const operators */
-    const Vec2 c;
-    const Vec2 c2;
+    CE const Vec2 c;
+    CE const Vec2 c2;
     CORRADE_VERIFY(std::is_same<decltype(+c), Vec2>::value);
     CORRADE_VERIFY(std::is_same<decltype(-c), Vec2>::value);
     CORRADE_VERIFY(std::is_same<decltype(c + c), Vec2>::value);
@@ -1398,6 +1418,11 @@ void VectorTest::debugPacked() {
     Debug{&out} << Debug::packed << Vector4(0.5f, 15.0f, 1.0f, 1.0f) << Vector4();
     CORRADE_COMPARE(out, "{0.5, 15, 1, 1} Vector(0, 0, 0, 0)\n");
 }
+#else
+void VectorTest::skipTesting() {
+    CORRADE_SKIP("Relaxed constexpr not supported by the compiler.");
+}
+#endif
 
 void VectorTest::debugPropagateFlags() {
     Containers::String out;

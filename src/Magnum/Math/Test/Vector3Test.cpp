@@ -27,10 +27,13 @@
 #include <new>
 #include <Corrade/Containers/String.h>
 #include <Corrade/TestSuite/Tester.h>
+#include <Corrade/Utility/DebugStl.h>
 
 #include "Magnum/Math/Vector3.h"
 #include "Magnum/Math/StrictWeakOrdering.h"
 #include "Magnum/Math/Swizzle.h"
+
+#include "Cpp14VectorTest.h"
 
 struct Vec3 {
     float x, y, z;
@@ -57,6 +60,7 @@ namespace Test { namespace {
 struct Vector3Test: TestSuite::Tester {
     explicit Vector3Test();
 
+#ifndef SKIP_TESTING
     void construct();
     void constructDefault();
     void constructNoInit();
@@ -81,13 +85,23 @@ struct Vector3Test: TestSuite::Tester {
 
     void swizzleType();
     void debug();
+#else
+    void skipTesting();
+#endif
 };
 
 using Magnum::Vector3;
 using Magnum::Vector2;
 
 Vector3Test::Vector3Test() {
-    addTests({&Vector3Test::construct,
+#ifndef TESTING_CONSTEXPR
+    setTestName("MathVector3Test");
+#else
+    setTestName("Cpp14MathVector3Test");
+#endif
+    addTests({
+#ifndef SKIP_TESTING
+              &Vector3Test::construct,
               &Vector3Test::constructDefault,
               &Vector3Test::constructNoInit,
               &Vector3Test::constructOneValue,
@@ -110,9 +124,13 @@ Vector3Test::Vector3Test() {
               &Vector3Test::strictWeakOrdering,
 
               &Vector3Test::swizzleType,
-              &Vector3Test::debug});
+              &Vector3Test::debug
+#else
+              &Vector3Test::skipTesting
+#endif
+    });
 }
-
+#ifndef SKIP_TESTING
 void Vector3Test::construct() {
     constexpr Vector3 a = {1.0f, 2.5f, -3.0f};
     CORRADE_COMPARE(a, (Vector<3, Float>(1.0f, 2.5f, -3.0f)));
@@ -277,7 +295,7 @@ void Vector3Test::convert() {
 }
 
 void Vector3Test::access() {
-    Vector3 vec(1.0f, -2.0f, 5.0f);
+    CE Vector3 vec(1.0f, -2.0f, 5.0f);
     CORRADE_COMPARE(vec.x(), 1.0f);
     CORRADE_COMPARE(vec.r(), 1.0f);
     CORRADE_COMPARE(vec.y(), -2.0f);
@@ -301,8 +319,8 @@ void Vector3Test::access() {
 }
 
 void Vector3Test::cross() {
-    Vector3i a(1, -1, 1);
-    Vector3i b(4, 3, 7);
+    CE Vector3i a(1, -1, 1);
+    CE Vector3i b(4, 3, 7);
 
     CORRADE_COMPARE(Math::cross(a, b), Vector3i(-10, -3, 7));
 }
@@ -326,7 +344,7 @@ void Vector3Test::scales() {
 }
 
 void Vector3Test::twoComponent() {
-    Vector3 a(1.0f, 2.0f, 3.0f);
+    CE Vector3 a(1.0f, 2.0f, 3.0f);
     CORRADE_COMPARE(a.xy(), Vector2(1.0f, 2.0f));
     CORRADE_COMPARE(a.rg(), Vector2(1.0f, 2.0f));
 
@@ -392,7 +410,11 @@ void Vector3Test::debug() {
     Debug{&out} << Vector3(0.5f, 15.0f, 1.0f);
     CORRADE_COMPARE(out, "Vector(0.5, 15, 1)\n");
 }
-
+#else
+void Vector3Test::skipTesting() {
+    CORRADE_SKIP("Relaxed constexpr not supported by the compiler.");
+}
+#endif
 }}}}
 
 CORRADE_TEST_MAIN(Magnum::Math::Test::Vector3Test)
