@@ -426,6 +426,22 @@ template<std::size_t size, class T> CORRADE_CONSTEXPR20 inline VectorTypeFor<siz
     return out;
 }
 
+/** @Brief Copy sign of b to a */
+template<class T, typename std::enable_if<IsScalar<T>::value>::type** = nullptr> MAGNUM_CONSTEXPR_COPYSIGN inline T copysign(T a, T b) {
+#ifdef MAGNUM_HAS_CONSTEXPR_FMOD
+    if (CORRADE_CONSTEVAL)
+        return ConstantMath::copysign(a, b);
+#endif
+    return std::copysign(a, b);
+}
+
+/** @overload */
+template<std::size_t size, class T> MAGNUM_CONSTEXPR_COPYSIGN inline VectorTypeFor<size, T> copysign(const Vector<size, T>& a, const Vector<size, T>& b) {
+    VectorTypeFor<size, T> out{Magnum::NoInit};
+    for(std::size_t i = 0; i != size; ++i)
+        out[i] = Math::copysign(a[i], b[i]);
+    return out;
+}
 /** @brief Nearest not larger integer */
 template<class T, typename std::enable_if<IsScalar<T>::value>::type** = nullptr> MAGNUM_CONSTEXPR_FLOOR inline T floor(T a) {
 #ifdef MAGNUM_HAS_CONSTEXPR_FLOOR
@@ -489,7 +505,11 @@ Calculates the remainder @f$ r @f$ of a floating point division: @f[
 
 @m_keyword{mod(),GLSL mod(),}
 */
-template<class T> inline typename std::enable_if<IsScalar<T>::value, T>::type fmod(T a, T b) {
+template<class T> MAGNUM_CONSTEXPR_FMOD inline typename std::enable_if<IsScalar<T>::value, T>::type fmod(T a, T b) {
+#ifdef MAGNUM_HAS_CONSTEXPR_FMOD
+    if (CORRADE_CONSTEVAL)
+        return T(ConstantMath::fmod(UnderlyingTypeOf<T>(a), UnderlyingTypeOf<T>(b)));
+#endif
     return T(std::fmod(UnderlyingTypeOf<T>(a), UnderlyingTypeOf<T>(b)));
 }
 
@@ -497,7 +517,7 @@ template<class T> inline typename std::enable_if<IsScalar<T>::value, T>::type fm
 @overload
 @m_since_latest
 */
-template<std::size_t size, class T> inline VectorTypeFor<size, T> fmod(const Vector<size, T>& a, const Vector<size, T>& b) {
+template<std::size_t size, class T> MAGNUM_CONSTEXPR_FMOD inline VectorTypeFor<size, T> fmod(const Vector<size, T>& a, const Vector<size, T>& b) {
     VectorTypeFor<size, T> out{Magnum::NoInit};
     for(std::size_t i = 0; i != size; ++i)
         out[i] = Math::fmod(a[i], b[i]);
@@ -508,8 +528,8 @@ template<std::size_t size, class T> inline VectorTypeFor<size, T> fmod(const Vec
 @overload
 @m_since_latest
 */
-template<std::size_t size, class T> inline Vector<size, T> fmod(const Vector<size, T>& a, T b) {
-    Vector<size, T> out{Magnum::NoInit};
+template<std::size_t size, class T> MAGNUM_CONSTEXPR_FMOD inline VectorTypeFor<size, T> fmod(const Vector<size, T>& a, T b) {
+    VectorTypeFor<size, T> out{Magnum::NoInit};
     for(std::size_t i = 0; i != size; ++i)
         out[i] = Math::fmod(a[i], b);
     return out;
