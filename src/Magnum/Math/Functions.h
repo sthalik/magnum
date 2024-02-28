@@ -520,6 +520,26 @@ template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline VectorTypeFor<siz
     return out;
 }
 
+/** @Brief Copy sign of b to a */
+template<class T, typename std::enable_if<IsScalar<T>::value>::type** = nullptr> MAGNUM_CONSTEXPR_COPYSIGN inline T copysign(T a, T b) {
+#ifdef MAGNUM_HAS_CONSTEXPR_COPYSIGN
+    if (CORRADE_CONSTEVAL)
+        return ConstantMath::copysign(a, b);
+#endif
+    return std::copysign(a, b);
+}
+
+/** @overload */
+template<std::size_t size, class T> MAGNUM_CONSTEXPR_COPYSIGN inline VectorTypeFor<size, T> copysign(const Vector<size, T>& a, const Vector<size, T>& b) {
+    #if CORRADE_CXX_STANDARD >= 202002L
+    VectorTypeFor<size, T> out{Magnum::NoInit};
+    #else
+    VectorTypeFor<size, T> out{ZeroInit};
+    #endif
+    for(std::size_t i = 0; i != size; ++i)
+        out[i] = Math::copysign(a[i], b[i]);
+    return out;
+}
 /** @brief Nearest not larger integer */
 template<class T
     #ifndef DOXYGEN_GENERATING_OUTPUT
@@ -608,7 +628,11 @@ template<class T
     #ifndef DOXYGEN_GENERATING_OUTPUT
     , typename std::enable_if<IsScalar<T>::value, int>::type = 0
     #endif
-> inline T fmod(T a, T b) {
+> MAGNUM_CONSTEXPR_FMOD inline T fmod(T a, T b) {
+#ifdef MAGNUM_HAS_CONSTEXPR_FMOD
+    if (CORRADE_CONSTEVAL)
+        return T(ConstantMath::fmod(UnderlyingTypeOf<T>(a), UnderlyingTypeOf<T>(b)));
+#endif
     return T(std::fmod(UnderlyingTypeOf<T>(a), UnderlyingTypeOf<T>(b)));
 }
 
@@ -616,8 +640,12 @@ template<class T
 @overload
 @m_since_latest
 */
-template<std::size_t size, class T> inline VectorTypeFor<size, T> fmod(const Vector<size, T>& a, const Vector<size, T>& b) {
+template<std::size_t size, class T> MAGNUM_CONSTEXPR_FMOD inline VectorTypeFor<size, T> fmod(const Vector<size, T>& a, const Vector<size, T>& b) {
+    #if CORRADE_CXX_STANDARD >= 202002L
     VectorTypeFor<size, T> out{Magnum::NoInit};
+    #else
+    VectorTypeFor<size, T> out{ZeroInit};
+    #endif
     for(std::size_t i = 0; i != size; ++i)
         out[i] = Math::fmod(a[i], b[i]);
     return out;
@@ -627,8 +655,12 @@ template<std::size_t size, class T> inline VectorTypeFor<size, T> fmod(const Vec
 @overload
 @m_since_latest
 */
-template<std::size_t size, class T> inline Vector<size, T> fmod(const Vector<size, T>& a, T b) {
-    Vector<size, T> out{Magnum::NoInit};
+template<std::size_t size, class T> MAGNUM_CONSTEXPR_FMOD inline VectorTypeFor<size, T> fmod(const Vector<size, T>& a, T b) {
+    #if CORRADE_CXX_STANDARD >= 202002L
+    VectorTypeFor<size, T> out{Magnum::NoInit};
+    #else
+    VectorTypeFor<size, T> out{ZeroInit};
+    #endif
     for(std::size_t i = 0; i != size; ++i)
         out[i] = Math::fmod(a[i], b);
     return out;
