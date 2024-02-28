@@ -110,6 +110,14 @@ template<typename T> constexpr T sqrtPositive(T x)
     return root*scale;
 }
 
+#if !defined CORRADE_TARGET_GCC && !defined CORRADE_TARGET_CLANG
+template<typename T> struct BitsFor;
+template<> struct BitsFor<float> { using type = std::uint32_t; };
+template<> struct BitsFor<double> { using type = std::uint64_t; };
+/* MSVC's long double is double */
+template<> struct BitsFor<long double> { using type = std::uint64_t; };
+#endif
+
 }
 
 #define MAGNUM_HAS_CONSTEXPR_SQRT
@@ -155,10 +163,65 @@ template<typename U> CORRADE_ALWAYS_INLINE constexpr Implementation::FloatTypeFo
     return floatValue < T(0) ? -trunc : trunc == absValue ? trunc : trunc + T(1);
 }
 
+#define MAGNUM_HAS_CONSTEXPR_COPYSIGN
+#define MAGNUM_CONSTEXPR_COPYSIGN constexpr
+#if defined CORRADE_TARGET_GCC || defined CORRADE_TARGET_CLANG
+CORRADE_ALWAYS_INLINE constexpr float copysign(float x, float y)
+{
+    return __builtin_copysignf(x, y);
+}
+CORRADE_ALWAYS_INLINE constexpr double copysign(double x, double y)
+{
+    return __builtin_copysign(x, y);
+}
+CORRADE_ALWAYS_INLINE constexpr long double copysign(long double x, long double y)
+{
+    return __builtin_copysignl(x, y);
+}
+template<typename U, typename std::enable_if<std::is_integral<U>::value, int>::type = 0> CORRADE_ALWAYS_INLINE constexpr double copysign(U x, U y)
+{
+    return __builtin_copysign(x, y);
+}
+#else
+template<typename U> CORRADE_ALWAYS_INLINE constexpr Implementation::FloatTypeFor<U> copysign(U xValue, U yValue)
+{
+    using T = Implementation::FloatTypeFor<U>;
+    using Bits = typename Implementation::BitsFor<T>::type;
+    const Bits signMask = Bits(1) << (sizeof(Bits)*8 - 1);
+    /* MSVC 19.29 and 19.31 crash when a __builtin_bit_cast() operand is a
+       temporary */
+    const T floatX = T(xValue), floatY = T(yValue);
+    const Bits xBits = __builtin_bit_cast(Bits, floatX), yBits = __builtin_bit_cast(Bits, floatY);
+    const Bits outBits = (xBits & ~signMask)|(yBits & signMask);
+    return __builtin_bit_cast(T, outBits);
+}
+#endif
+
+#define MAGNUM_HAS_CONSTEXPR_FMOD
+#define MAGNUM_CONSTEXPR_FMOD constexpr
+template<typename U> CORRADE_ALWAYS_INLINE constexpr Implementation::FloatTypeFor<U> fmod(U xValue, U yValue)
+{
+    using T = Implementation::FloatTypeFor<U>;
+    const T floatX = T(xValue), floatY = T(yValue), inf = std::numeric_limits<T>::infinity();
+    if (floatX != floatX)
+        return floatX;
+    if (floatY != floatY)
+        return floatY;
+    /* Domain error, which std::fmod() makes a non-constant expression */
+    if (floatX == inf || floatX == -inf || floatY == T(0))
+        return std::fmod(floatX, floatY);
+    if (floatX == T(0) || floatY == inf || floatY == -inf)
+        return floatX;
+    const T remainder = Implementation::fmodPositive(floatX < T(0) ? -floatX : floatX, floatY < T(0) ? -floatY : floatY);
+    return floatX < T(0) ? -remainder : remainder;
+}
+
 #else
 #define MAGNUM_CONSTEXPR_SQRT
 #define MAGNUM_CONSTEXPR_FLOOR
 #define MAGNUM_CONSTEXPR_CEIL
+#define MAGNUM_CONSTEXPR_COPYSIGN
+#define MAGNUM_CONSTEXPR_FMOD
 #endif
 
 } // namespace ConstantMath

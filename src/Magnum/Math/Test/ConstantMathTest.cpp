@@ -66,6 +66,10 @@ struct ConstantMathTest: TestSuite::Tester {
     template<class T> void floor();
     template<class T> void ceil();
     template<class T> void floorCeilRuntime();
+    template<class T> void fmod();
+    template<class T> void fmodRuntime();
+    template<class T> void copysign();
+    template<class T> void copysignRuntime();
     template<class T> void domainError();
     void integerArgument();
 
@@ -95,6 +99,18 @@ ConstantMathTest::ConstantMathTest() {
               &ConstantMathTest::floorCeilRuntime<Float>,
               &ConstantMathTest::floorCeilRuntime<Double>,
               &ConstantMathTest::floorCeilRuntime<long double>,
+              &ConstantMathTest::fmod<Float>,
+              &ConstantMathTest::fmod<Double>,
+              &ConstantMathTest::fmod<long double>,
+              &ConstantMathTest::fmodRuntime<Float>,
+              &ConstantMathTest::fmodRuntime<Double>,
+              &ConstantMathTest::fmodRuntime<long double>,
+              &ConstantMathTest::copysign<Float>,
+              &ConstantMathTest::copysign<Double>,
+              &ConstantMathTest::copysign<long double>,
+              &ConstantMathTest::copysignRuntime<Float>,
+              &ConstantMathTest::copysignRuntime<Double>,
+              &ConstantMathTest::copysignRuntime<long double>,
               &ConstantMathTest::domainError<Float>,
               &ConstantMathTest::domainError<Double>,
               &ConstantMathTest::domainError<long double>,
@@ -172,6 +188,17 @@ template<class F, class T, std::size_t size> constexpr Results<T, size> evaluate
     return out;
 }
 
+template<class T> struct Pair {
+    T a, b;
+};
+
+template<class F, class T, std::size_t size> constexpr Results<T, size> evaluate(const Pair<T>(&values)[size]) {
+    Results<T, size> out{};
+    for(std::size_t i = 0; i != size; ++i)
+        out.data[i] = F{}(values[i].a, values[i].b);
+    return out;
+}
+
 struct Sqrt {
     template<class T> constexpr T operator()(T value) const {
         return ConstantMath::sqrt(value);
@@ -187,6 +214,18 @@ struct Floor {
 struct Ceil {
     template<class T> constexpr T operator()(T value) const {
         return ConstantMath::ceil(value);
+    }
+};
+
+struct Fmod {
+    template<class T> constexpr T operator()(T a, T b) const {
+        return ConstantMath::fmod(a, b);
+    }
+};
+
+struct Copysign {
+    template<class T> constexpr T operator()(T a, T b) const {
+        return ConstantMath::copysign(a, b);
     }
 };
 #endif
@@ -358,6 +397,122 @@ template<class T> void ConstantMathTest::floorCeilRuntime() {
     #endif
 }
 
+template<class T> void ConstantMathTest::fmod() {
+    setTestCaseTemplateName(TypeTraits<T>::name());
+
+    #ifndef MAGNUM_HAS_CONSTEXPR_FMOD
+    CORRADE_SKIP("ConstantMath::fmod() not supported by the compiler.");
+    #else
+    typedef std::numeric_limits<T> L;
+    static constexpr Pair<T> values[]{
+        {T(7), T(3)}, {-T(7), T(3)}, {T(7), -T(3)}, {-T(7), -T(3)},
+        {T(0.75), T(0.5)},
+        {T(1)/T(60), T(1)/T(61)},
+        {T(12345.678), T(0.1)},
+        {T(0.5), T(1)}, {-T(0.5), T(1)},
+        {T(5.5), T(5.5)}, {-T(5.5), T(5.5)},
+        {T(0.0), T(1)}, {-T(0.0), T(1)},
+        {T(1), L::infinity()}, {-T(1), -L::infinity()},
+        {L::quiet_NaN(), T(1)}, {T(1), L::quiet_NaN()},
+        {L::max(), T(3)},
+        {L::max(), L::epsilon()},
+        {L::max(), L::min()},
+        {L::min(), L::denorm_min()},
+        {T(7)*L::denorm_min(), T(2)*L::denorm_min()},
+        {T(1)/L::epsilon() + T(1), T(3)}
+    };
+    constexpr Results<T, Containers::arraySize(values)> actual = evaluate<Fmod>(values);
+
+    for(std::size_t i = 0; i != Containers::arraySize(values); ++i) {
+        CORRADE_ITERATION(i << exact(values[i].a) << exact(values[i].b));
+        const T expected = std::fmod(values[i].a, values[i].b);
+        CORRADE_FAIL_IF(!same(actual.data[i], expected),
+            "Got" << exact(actual.data[i]) << "but std::fmod() returns" << exact(expected));
+    }
+
+    /* The most steps of the long division. Separate, as MSVC limits the steps
+       of a single constant expression. */
+    static constexpr Pair<T> longest[]{
+        {L::max(), L::denorm_min()}
+    };
+    constexpr Results<T, 1> actualLongest = evaluate<Fmod>(longest);
+    const T expectedLongest = std::fmod(longest[0].a, longest[0].b);
+    CORRADE_FAIL_IF(!same(actualLongest.data[0], expectedLongest),
+        "Got" << exact(actualLongest.data[0]) << "but std::fmod() returns" << exact(expectedLongest));
+    #endif
+}
+
+template<class T> void ConstantMathTest::fmodRuntime() {
+    setTestCaseTemplateName(TypeTraits<T>::name());
+
+    #ifndef MAGNUM_HAS_CONSTEXPR_FMOD
+    CORRADE_SKIP("ConstantMath::fmod() not supported by the compiler.");
+    #elif defined RUNTIME_SKIP_REASON
+    CORRADE_SKIP(RUNTIME_SKIP_REASON);
+    #else
+    Random random{0xf30d};
+    for(std::size_t i = 0; i != 1000; ++i) {
+        const T a = randomSign(random, randomPositive<T>(random));
+        const T b = randomSign(random, i % 2 ?
+            randomPositive<T>(random) :
+            (a < T(0) ? -a : a)/T(1 + random() % 100000));
+        CORRADE_ITERATION(i << exact(a) << exact(b));
+        const T actual = ConstantMath::fmod(a, b);
+        const T expected = std::fmod(a, b);
+        CORRADE_FAIL_IF(!same(actual, expected),
+            "Got" << exact(actual) << "but std::fmod() returns" << exact(expected));
+    }
+    #endif
+}
+
+template<class T> void ConstantMathTest::copysign() {
+    setTestCaseTemplateName(TypeTraits<T>::name());
+
+    #ifndef MAGNUM_HAS_CONSTEXPR_COPYSIGN
+    CORRADE_SKIP("ConstantMath::copysign() not supported by the compiler.");
+    #else
+    typedef std::numeric_limits<T> L;
+    static constexpr Pair<T> values[]{
+        {T(1), T(2)}, {T(1), -T(2)}, {-T(1), T(2)}, {-T(1), -T(2)},
+        {T(2), T(0.0)}, {T(2), -T(0.0)}, {-T(2), T(0.0)}, {-T(2), -T(0.0)},
+        {T(0.0), -T(1)}, {-T(0.0), T(1)},
+        {L::infinity(), -T(1)}, {-L::infinity(), T(1)},
+        {T(1), -L::infinity()}, {-T(1), L::infinity()},
+        {T(1), L::quiet_NaN()}, {T(1), -L::quiet_NaN()},
+        {L::quiet_NaN(), -T(1)}, {-L::quiet_NaN(), T(1)},
+        {L::denorm_min(), -T(1)}, {L::max(), -L::denorm_min()}
+    };
+    constexpr Results<T, Containers::arraySize(values)> actual = evaluate<Copysign>(values);
+
+    for(std::size_t i = 0; i != Containers::arraySize(values); ++i) {
+        CORRADE_ITERATION(i << exact(values[i].a) << exact(values[i].b));
+        const T expected = std::copysign(values[i].a, values[i].b);
+        /* Unlike for other functions, the sign of a NaN result is specified */
+        CORRADE_FAIL_IF(!same(actual.data[i], expected) || std::signbit(actual.data[i]) != std::signbit(expected),
+            "Got" << exact(actual.data[i]) << "but std::copysign() returns" << exact(expected));
+    }
+    #endif
+}
+
+template<class T> void ConstantMathTest::copysignRuntime() {
+    setTestCaseTemplateName(TypeTraits<T>::name());
+
+    #ifndef MAGNUM_HAS_CONSTEXPR_COPYSIGN
+    CORRADE_SKIP("ConstantMath::copysign() not supported by the compiler.");
+    #else
+    Random random{0xc095};
+    for(std::size_t i = 0; i != 1000; ++i) {
+        const T a = randomSign(random, randomPositive<T>(random));
+        const T b = randomSign(random, randomPositive<T>(random));
+        CORRADE_ITERATION(i << exact(a) << exact(b));
+        const T actual = ConstantMath::copysign(a, b);
+        const T expected = std::copysign(a, b);
+        CORRADE_FAIL_IF(!same(actual, expected),
+            "Got" << exact(actual) << "but std::copysign() returns" << exact(expected));
+    }
+    #endif
+}
+
 template<class T> void ConstantMathTest::domainError() {
     setTestCaseTemplateName(TypeTraits<T>::name());
 
@@ -369,6 +524,10 @@ template<class T> void ConstantMathTest::domainError() {
     CORRADE_VERIFY(std::isnan(ConstantMath::sqrt(-T(1))));
     CORRADE_VERIFY(std::isnan(ConstantMath::sqrt(-L::denorm_min())));
     CORRADE_VERIFY(std::isnan(ConstantMath::sqrt(-L::infinity())));
+    CORRADE_VERIFY(std::isnan(ConstantMath::fmod(L::infinity(), T(1))));
+    CORRADE_VERIFY(std::isnan(ConstantMath::fmod(-L::infinity(), T(1))));
+    CORRADE_VERIFY(std::isnan(ConstantMath::fmod(T(1), T(0.0))));
+    CORRADE_VERIFY(std::isnan(ConstantMath::fmod(T(1), -T(0.0))));
     #endif
 }
 
@@ -379,12 +538,18 @@ void ConstantMathTest::integerArgument() {
     constexpr auto a = ConstantMath::sqrt(16);
     constexpr auto b = ConstantMath::floor(-5);
     constexpr auto c = ConstantMath::ceil(5);
+    constexpr auto d = ConstantMath::fmod(7, -3);
+    constexpr auto e = ConstantMath::copysign(3, -1);
     CORRADE_VERIFY(std::is_same<decltype(a), const double>::value);
     CORRADE_VERIFY(std::is_same<decltype(b), const double>::value);
     CORRADE_VERIFY(std::is_same<decltype(c), const double>::value);
+    CORRADE_VERIFY(std::is_same<decltype(d), const double>::value);
+    CORRADE_VERIFY(std::is_same<decltype(e), const double>::value);
     CORRADE_COMPARE(a, std::sqrt(16));
     CORRADE_COMPARE(b, std::floor(-5));
     CORRADE_COMPARE(c, std::ceil(5));
+    CORRADE_COMPARE(d, std::fmod(7, -3));
+    CORRADE_COMPARE(e, std::copysign(3, -1));
     #endif
 }
 
