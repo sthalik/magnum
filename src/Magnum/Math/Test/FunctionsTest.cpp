@@ -34,6 +34,11 @@
 
 namespace Magnum { namespace Math { namespace Test { namespace {
 
+#undef DO_CE_TESTS
+#if defined CORRADE_CONSTEVAL && (defined MAGNUM_HAS_CONSTEXPR_FMOD || defined MAGNUM_HAS_CONSTEXPR_COPYSIGN)
+#define DO_CE_TESTS
+#endif
+
 struct FunctionsTest: TestSuite::Tester {
     explicit FunctionsTest();
 
@@ -90,6 +95,10 @@ struct FunctionsTest: TestSuite::Tester {
     void trigonometric();
     void trigonometricWithBase();
     template<class T> void sincos();
+
+#ifdef DO_CE_TESTS
+    void constantMath();
+#endif
 };
 
 using namespace Literals;
@@ -161,6 +170,9 @@ FunctionsTest::FunctionsTest() {
               &FunctionsTest::sincos<Double>,
               #ifndef CORRADE_TARGET_EMSCRIPTEN
               &FunctionsTest::sincos<long double>,
+              #endif
+              #ifdef DO_CE_TESTS
+              &FunctionsTest::constantMath,
               #endif
               });
 }
@@ -683,6 +695,45 @@ template<class T> void FunctionsTest::sincos() {
     CORRADE_COMPARE(Math::sincos(Math::Deg<T>(T(30.0))).first(), T(0.5));
     CORRADE_COMPARE(Math::sincos(Math::Deg<T>(T(30.0))).second(), T(0.866025403784438647l));
 }
+
+#ifdef DO_CE_TESTS
+void FunctionsTest::constantMath() {
+#define CMP(actual, expected)                                   \
+    do {                                                        \
+        static_assert(Math::abs(actual - expected) < 1e-8);     \
+        CORRADE_COMPARE(actual, expected);                      \
+    } while (false)
+
+#ifdef CORRADE_HAS_CONSTEXPR_FMOD
+    {
+        constexpr auto a = Math::fmod(7., 3.);       CMP(a, 1.);
+        constexpr auto b = Math::fmod(0.75, 0.5);    CMP(b, 0.25);
+        constexpr auto c = Math::fmod(0.5, 1.);      CMP(c, 0.5);
+        constexpr auto d = Math::fmod(1./60, 1./61); CMP(d, 0.0002732240437158459);
+        constexpr auto e = Math::fmod(0.5, 1.);      CMP(e, 0.5);
+        constexpr auto f = Math::fmod(-0.5, 1.);     CMP(f, -0.5);
+        constexpr auto g = Math::fmod(-0.5, -1.);    CMP(g, -0.5);
+        constexpr auto h = Math::fmod(0.5, -1.);     CMP(h, 0.5);
+
+        constexpr auto i = Math::fmod(Vector2d(0.15, 0.92), Vector2d(0.125, 0.9));
+        CMP(i.x(), 0.025); CMP(i.y(), 0.02);
+
+        constexpr auto j = Math::fmod(Vector2d(0.13, 0.14), 0.11);
+        CMP(j.x(), 0.02); CMP(j.y(), 0.03);
+    }
+#endif
+#if CORRADE_HAS_CONSTEXPR_COPYSIGN
+    {
+        constexpr auto a = Math::copysign( 1.,  2.); CMP(a,  1.);
+        constexpr auto b = Math::copysign(-3.,  4.); CMP(b,  3.);
+        constexpr auto c = Math::copysign( 5., -6.); CMP(c, -5.);
+        constexpr auto d = Math::copysign(-7., -8.); CMP(d, -7.);
+        constexpr auto e = Math::copysign(Vector2d(-1., 2.), Vector2d(3., -4.));
+        CMP(e.x(), 1.); CMP(e.y(), -2.);
+    }
+#endif
+}
+#endif
 
 }}}}
 
