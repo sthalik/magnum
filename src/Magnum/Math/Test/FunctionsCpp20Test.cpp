@@ -39,6 +39,8 @@ struct FunctionsCpp20Test: TestSuite::Tester {
     void lerpBitVectorConstexpr();
     void floorCeilConstexpr();
     void sqrtConstexpr();
+    void copysignConstexpr();
+    void fmodConstexpr();
 };
 
 using Magnum::Vector3;
@@ -49,7 +51,9 @@ FunctionsCpp20Test::FunctionsCpp20Test() {
               &FunctionsCpp20Test::signAbsConstexpr,
               &FunctionsCpp20Test::lerpBitVectorConstexpr,
               &FunctionsCpp20Test::floorCeilConstexpr,
-              &FunctionsCpp20Test::sqrtConstexpr});
+              &FunctionsCpp20Test::sqrtConstexpr,
+              &FunctionsCpp20Test::copysignConstexpr,
+              &FunctionsCpp20Test::fmodConstexpr});
 }
 
 void FunctionsCpp20Test::minMaxClampConstexpr() {
@@ -98,6 +102,26 @@ void FunctionsCpp20Test::sqrtConstexpr() {
     #else
     constexpr Vector3 a = Math::sqrt(Vector3{16.0f, 2.25f, 0.0f});
     CORRADE_COMPARE(a, (Vector3{4.0f, 1.5f, 0.0f}));
+    #endif
+}
+
+void FunctionsCpp20Test::copysignConstexpr() {
+    #ifndef MAGNUM_HAS_CONSTEXPR_COPYSIGN
+    CORRADE_SKIP("Constexpr copysign() not supported by the compiler.");
+    #else
+    constexpr Vector3 a = Math::copysign(Vector3{-1.0f, 2.0f, 3.0f}, Vector3{3.0f, -4.0f, 5.0f});
+    CORRADE_COMPARE(a, (Vector3{1.0f, -2.0f, 3.0f}));
+    #endif
+}
+
+void FunctionsCpp20Test::fmodConstexpr() {
+    #ifndef MAGNUM_HAS_CONSTEXPR_FMOD
+    CORRADE_SKIP("Constexpr fmod() not supported by the compiler.");
+    #else
+    constexpr Vector3 a = Math::fmod(Vector3{7.5f, -7.5f, 0.75f}, Vector3{2.0f, 2.0f, -0.5f});
+    constexpr Vector3 b = Math::fmod(Vector3{7.5f, -7.5f, 0.75f}, 2.0f);
+    CORRADE_COMPARE(a, (Vector3{1.5f, -1.5f, 0.25f}));
+    CORRADE_COMPARE(b, (Vector3{1.5f, -1.5f, 0.75f}));
     #endif
 }
 
