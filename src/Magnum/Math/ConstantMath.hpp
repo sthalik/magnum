@@ -51,10 +51,30 @@ template<typename T, typename std::enable_if<std::is_floating_point<T>::value>::
     return x0 + int_{1} * (x > x0);
 }
 
+#define MAGNUM_HAS_CONSTEXPR_COPYSIGN
+#define MAGNUM_CONSTEXPR_COPYSIGN constexpr
+template<typename T, typename std::enable_if<std::is_floating_point<T>::value>::type** = nullptr> CORRADE_ALWAYS_INLINE constexpr T copysign(T x, T y)
+{
+    return (x < T{0} ? -x : x) * (y < T{0} ? T{-1} : T{1});
+}
+
+#define MAGNUM_HAS_CONSTEXPR_FMOD
+#define MAGNUM_CONSTEXPR_FMOD constexpr
+template<typename T, typename std::enable_if<std::is_floating_point<T>::value>::type** = nullptr> CORRADE_ALWAYS_INLINE constexpr T fmod(T x, T y)
+{
+    const T xsign = x < T{0} ? T{-1} : T{1},
+            absx = x < T() ? -x : x, absy = y < T{0} ? -y : y,
+            div = x/y, absdiv = div < T{0} ? -div : div;
+    using int_ = Implementation::IntTypeFor<T>;
+    return (xsign) * (absx - T(int_(absdiv)) * absy);
+}
+
 #else
 #define MAGNUM_CONSTEXPR_SQRT
 #define MAGNUM_CONSTEXPR_FLOOR
 #define MAGNUM_CONSTEXPR_CEIL
+#define MAGNUM_CONSTEXPR_COPYSIGN
+#define MAGNUM_CONSTEXPR_FMOD
 #endif
 
 } // namespace ConstantMath
