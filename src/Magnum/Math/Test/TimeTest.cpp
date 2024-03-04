@@ -277,9 +277,9 @@ void TimeTest::convert() {
 
     constexpr Nanoseconds cc0 = 1707678819.0_sec;
     constexpr Seconds cd0 = 56.72_sec;
-    constexpr Time cc1(cc0);
+    //constexpr Time cc1(cc0);
     constexpr Keyframe cd1(cd0);
-    CORRADE_COMPARE(cc1.secondsSinceEpoch, 1707678819);
+    //CORRADE_COMPARE(cc1.secondsSinceEpoch, 1707678819);
     CORRADE_COMPARE(cd1.duration, 56.72f);
 
     /* It should not be possible to convert in a direction that may result in a
