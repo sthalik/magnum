@@ -667,7 +667,7 @@ foreach(_component ${Corrade_FIND_COMPONENTS})
             # it for anyone linking to Corrade::Utility. Similar code is in
             # Corrade/Utility/CMakeLists.txt.
             if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR (CMAKE_CXX_COMPILER_ID MATCHES "(Apple)?Clang" AND NOT CMAKE_CXX_SIMULATE_ID STREQUAL "MSVC") OR CORRADE_TARGET_EMSCRIPTEN)
-                set_property(TARGET Corrade::${_component} APPEND PROPERTY INTERFACE_COMPILE_OPTIONS -fno-strict-aliasing)
+                #set_property(TARGET Corrade::${_component} APPEND PROPERTY INTERFACE_COMPILE_OPTIONS -fno-strict-aliasing)
             endif()
 
             # Path::libraryLocation() needs this
