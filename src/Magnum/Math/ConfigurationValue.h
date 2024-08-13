@@ -31,6 +31,10 @@
  * @m_since{2019,10}
  */
 
+#include "Corrade/configure.h"
+#if CORRADE_CXX_STANDARD >= 202002L
+#include <bit>
+#endif
 #include <string>
 #include <Corrade/Utility/ConfigurationValue.h>
 
@@ -330,8 +334,12 @@ template<class T> struct ConfigurationValue<Magnum::Math::DualQuaternion<T>> {
 
     /** @brief Reads elements separated with whitespace */
     static Magnum::Math::DualQuaternion<T> fromString(const std::string& stringValue, ConfigurationValueFlags flags) {
+#if CORRADE_CXX_STANDARD >= 202002L
+        return std::bit_cast<Magnum::Math::DualQuaternion<T>>(ConfigurationValue<Magnum::Math::Vector<8, T>>::fromString(stringValue, flags));
+#else
         const Magnum::Math::Vector<8, T> value = ConfigurationValue<Magnum::Math::Vector<8, T>>::fromString(stringValue, flags);
         return reinterpret_cast<const Magnum::Math::DualQuaternion<T>&>(value);
+#endif
     }
 };
 
