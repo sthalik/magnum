@@ -45,6 +45,7 @@
 #include "Magnum/Math/Angle.h"
 #include "Magnum/Math/BitVector.h"
 #include "Magnum/Math/TypeTraits.h"
+#include "Magnum/Math/ConstantMath.hpp"
 
 #ifdef MAGNUM_BUILD_DEPRECATED
 /* Some APIs returned std::pair before */

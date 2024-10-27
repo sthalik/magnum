@@ -427,12 +427,16 @@ template<std::size_t size, class T> CORRADE_CONSTEXPR20 inline VectorTypeFor<siz
 }
 
 /** @brief Nearest not larger integer */
-template<class T> inline typename std::enable_if<IsScalar<T>::value, T>::type floor(T a) {
+template<class T, typename std::enable_if<IsScalar<T>::value>::type** = nullptr> MAGNUM_CONSTEXPR_FLOOR inline T floor(T a) {
+#ifdef MAGNUM_HAS_CONSTEXPR_FLOOR
+    if (CORRADE_CONSTEVAL)
+        return T(ConstantMath::floor(UnderlyingTypeOf<T>(a)));
+#endif
     return T(std::floor(UnderlyingTypeOf<T>(a)));
 }
 
 /** @overload */
-template<std::size_t size, class T> CORRADE_CONSTEXPR20 inline VectorTypeFor<size, T> floor(const Vector<size, T>& a) {
+template<std::size_t size, class T> MAGNUM_CONSTEXPR_FLOOR inline VectorTypeFor<size, T> floor(const Vector<size, T>& a) {
     VectorTypeFor<size, T> out{Magnum::NoInit};
     for(std::size_t i = 0; i != size; ++i)
         out[i] = Math::floor(a[i]);
@@ -453,12 +457,16 @@ template<std::size_t size, class T> inline VectorTypeFor<size, T> round(const Ve
 }
 
 /** @brief Nearest not smaller integer */
-template<class T> inline typename std::enable_if<IsScalar<T>::value, T>::type ceil(T a) {
+template<class T, typename std::enable_if<IsScalar<T>::value>::type** = nullptr> MAGNUM_CONSTEXPR_CEIL inline T ceil(T a) {
+#ifdef MAGNUM_HAS_CONSTEXPR_FLOOR
+    if (CORRADE_CONSTEVAL)
+        return T(ConstantMath::ceil(UnderlyingTypeOf<T>(a)));
+#endif
     return T(std::ceil(UnderlyingTypeOf<T>(a)));
 }
 
 /** @overload */
-template<std::size_t size, class T> CORRADE_CONSTEXPR20 inline VectorTypeFor<size, T> ceil(const Vector<size, T>& a) {
+template<std::size_t size, class T> MAGNUM_CONSTEXPR_CEIL inline VectorTypeFor<size, T> ceil(const Vector<size, T>& a) {
     VectorTypeFor<size, T> out{Magnum::NoInit};
     for(std::size_t i = 0; i != size; ++i)
         out[i] = Math::ceil(a[i]);
@@ -732,13 +740,17 @@ template<std::size_t size, class T> inline Vector<size, T> pow(const Vector<size
 Works only on types that satisfy @ref IsUnitless.
 @see @ref sqrtInverted(), @ref Vector::length(), @ref sqrt(const Dual<T>&)
 */
-template<class T> inline typename std::enable_if<IsScalar<T>::value, T>::type sqrt(T a) {
+template<class T> MAGNUM_CONSTEXPR_SQRT inline typename std::enable_if<IsScalar<T>::value, T>::type sqrt(T a) {
     static_assert(IsUnitless<T>::value, "expecting a unitless type");
+#ifdef MAGNUM_HAS_CONSTEXPR_SQRT
+    if (CORRADE_CONSTEVAL)
+        return ConstantMath::sqrt(a);
+#endif
     return std::sqrt(a);
 }
 
 /** @overload */
-template<std::size_t size, class T> inline Vector<size, T> sqrt(const Vector<size, T>& a) {
+template<std::size_t size, class T> MAGNUM_CONSTEXPR_SQRT inline Vector<size, T> sqrt(const Vector<size, T>& a) {
     Vector<size, T> out{Magnum::NoInit};
     for(std::size_t i = 0; i != size; ++i)
         out[i] = Math::sqrt(a[i]);
@@ -752,13 +764,17 @@ Works only on types that satisfy @ref IsUnitless.
 @see @ref sqrt(), @ref Vector::lengthInverted()
 @m_keyword{inversesqrt(),GLSL inversesqrt(),}
 */
-template<class T> inline typename std::enable_if<IsScalar<T>::value, T>::type sqrtInverted(T a) {
+template<class T> MAGNUM_CONSTEXPR_SQRT inline typename std::enable_if<IsScalar<T>::value, T>::type sqrtInverted(T a) {
     static_assert(IsUnitless<T>::value, "expecting a unitless type");
+#ifdef MAGNUM_HAS_CONSTEXPR_SQRT
+    if (CORRADE_CONSTEVAL)
+        return T(1)/ConstantMath::sqrt(a);
+#endif
     return T(1)/std::sqrt(a);
 }
 
 /** @overload */
-template<std::size_t size, class T> inline Vector<size, T> sqrtInverted(const Vector<size, T>& a) {
+template<std::size_t size, class T> MAGNUM_CONSTEXPR_SQRT inline Vector<size, T> sqrtInverted(const Vector<size, T>& a) {
     return Vector<size, T>(T(1))/Math::sqrt(a);
 }
 
@@ -811,13 +827,13 @@ Wikipedia has a [List of refractive indices](https://en.wikipedia.org/wiki/List_
 @see @ref dot(const Vector<size, T>&, const Vector<size, T>&), @ref reflect(),
     @ref Vector::isNormalized()
 */
-template<std::size_t size, class T> inline Vector<size, T> refract(const Vector<size, T>& vector, const Vector<size, T>& normal, T eta) {
+template<std::size_t size, class T> MAGNUM_CONSTEXPR_SQRT inline Vector<size, T> refract(const Vector<size, T>& vector, const Vector<size, T>& normal, T eta) {
     CORRADE_DEBUG_ASSERT(vector.isNormalized() && normal.isNormalized(),
         "Math::refract(): vectors" << vector << "and" << normal << "are not normalized", {});
     const T dot = Math::dot(vector, normal);
     const T k  = T(1.0) - eta*eta*(T(1.0) - dot*dot);
     if(k < T(0.0)) return {};
-    return eta*vector - (eta*dot + std::sqrt(k))*normal;
+    return eta*vector - (eta*dot + Math::sqrt(k))*normal;
 }
 
 }}
