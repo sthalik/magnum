@@ -565,11 +565,17 @@ bool Sdl2Application::tryCreate(const Configuration& configuration, const GLConf
 
     /* Request debug context if GpuValidation is enabled either via the
        configuration or via command-line */
+    CORRADE_UNUSED bool noNoError = false;
     GLConfiguration::Flags glFlags = glConfiguration.flags();
+    if((glFlags & GLConfiguration::Flag::RobustAccess) || _context->configurationFlags() & GL::Context::Configuration::Flag::RobustAccess)
+        glFlags |= GLConfiguration::Flag::RobustAccess, noNoError = true;
+    if((glFlags & GLConfiguration::Flag::ResetIsolation) || (_context->configurationFlags() & GL::Context::Configuration::Flag::ResetIsolation))
+        glFlags |= GLConfiguration::Flag::ResetIsolation, noNoError = true;
     if((glFlags & GLConfiguration::Flag::GpuValidation) || (_context->configurationFlags() & GL::Context::Configuration::Flag::GpuValidation))
-        glFlags |= GLConfiguration::Flag::Debug;
-    else if((glFlags & GLConfiguration::Flag::GpuValidationNoError) || (_context->configurationFlags() & GL::Context::Configuration::Flag::GpuValidationNoError))
-        glFlags |= GLConfiguration::Flag::NoError;
+        glFlags |= GLConfiguration::Flag::Debug, noNoError = true;
+    else if (!noNoError)
+        if((glFlags & GLConfiguration::Flag::GpuValidationNoError) || (_context->configurationFlags() & GL::Context::Configuration::Flag::GpuValidationNoError))
+            glFlags |= GLConfiguration::Flag::NoError;
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_NO_ERROR, glFlags >= GLConfiguration::Flag::NoError);
 
