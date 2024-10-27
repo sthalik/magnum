@@ -32,7 +32,7 @@
 #include <Corrade/Containers/Reference.h>
 #include <Corrade/Containers/StringIterable.h>
 #include <Corrade/Utility/Arguments.h>
-#include <Corrade/Utility/Debug.h>
+#include <Corrade/Utility/DebugStl.h>
 #include <Corrade/Utility/Macros.h> /* CORRADE_THREAD_LOCAL */
 
 #include "Magnum/GL/AbstractFramebuffer.h"
@@ -744,7 +744,7 @@ Context::Context(NoCreateT, Utility::Arguments& args, const Int argc, const char
     CORRADE_INTERNAL_ASSERT(args.prefix() == "magnum");
     args.addOption("disable-workarounds").setHelp("disable-workarounds", "driver workarounds to disable\n      (see https://doc.magnum.graphics/magnum/opengl-workarounds.html for detailed info)", "LIST")
         .addOption("disable-extensions").setHelp("disable-extensions", "API extensions to disable", "LIST")
-        .addOption("gpu-validation", "off").setHelp("gpu-validation", "GPU validation using KHR_debug (if present)", "off|on|no-error")
+        .addOption("gpu-validation").setHelp("gpu-validation", "GPU validation using KHR_debug and/or ARB_robustness (if present)", "no-error|off|on|robust|isolated|full[, ...]")
         .addOption("log", "default").setHelp("log", "console logging", "default|quiet|verbose")
         .setFromEnvironment("disable-workarounds")
         .setFromEnvironment("disable-extensions")
@@ -758,11 +758,30 @@ Context::Context(NoCreateT, Utility::Arguments& args, const Int argc, const char
     else if(args.value("log") == "quiet" || args.value("log") == "QUIET")
         _configurationFlags |= Configuration::Flag::QuietLog;
 
-    /* Decide whether to enable GPU validation / no error context */
-    if(args.value("gpu-validation") == "on" || args.value("gpu-validation") == "ON")
-        _configurationFlags |= Configuration::Flag::GpuValidation;
-    else if(args.value("gpu-validation") == "no-error")
-        _configurationFlags |= Configuration::Flag::GpuValidationNoError;
+    for (const auto& value : args.value<Containers::StringView>("gpu-validation").splitOnWhitespaceWithoutEmptyParts()) {
+        using CF = Configuration::Flag;
+        const struct {
+            const std::string name;
+            Implementation::ContextConfigurationFlags enable, disable;
+        } switches[] = {
+            { "no-error", CF::GpuValidationNoError, CF::GpuValidation|CF::ResetIsolation|CF::RobustAccess },
+            { "off",      {}, CF::GpuValidation },
+            { "on",       CF::GpuValidation, CF::GpuValidationNoError },
+            { "robust",   CF::RobustAccess, CF::GpuValidationNoError },
+            { "isolated", CF::ResetIsolation | CF::RobustAccess, CF::GpuValidationNoError },
+            { "full",     CF::GpuValidation | CF::RobustAccess | CF::ResetIsolation, CF::GpuValidationNoError },
+        };
+        bool found = false;
+        for (const auto& x : switches)
+            if (value == x.name) {
+                found = true;
+                _configurationFlags &= ~x.disable;
+                _configurationFlags |= x.enable;
+                break;
+            }
+        if (!found)
+            Warning{Warning::Flag::NoSpace} << "GL::Context: wrong flag '" << value << "' passed to --magnum-gpu-validation";
+    }
 
     /* If there are any disabled workarounds, save them until tryCreate() uses
        them. The disableWorkaround() function saves the internal string view
@@ -839,6 +858,10 @@ bool Context::tryCreate(const Configuration& configuration) {
         _configurationFlags |= Configuration::Flag::GpuValidation;
     if(configuration.flags() & Configuration::Flag::GpuValidationNoError)
         _configurationFlags |= Configuration::Flag::GpuValidationNoError;
+    if(configuration.flags() & Configuration::Flag::RobustAccess)
+        _configurationFlags |= Configuration::Flag::RobustAccess;
+    if(configuration.flags() & Configuration::Flag::ResetIsolation)
+        _configurationFlags |= Configuration::Flag::ResetIsolation;
 
     /* Same for windowless */
     if(configuration.flags() & Configuration::Flag::Windowless)

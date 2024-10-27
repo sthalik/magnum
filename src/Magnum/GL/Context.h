@@ -71,6 +71,8 @@ namespace Implementation {
        Context before the Configuration class is defined, it has to be here */
     enum class ContextConfigurationFlag: UnsignedLong {
         /* Keeping the 32-bit range reserved for actual GL context flags */
+        ResetIsolation = 1ull << 57,
+        RobustAccess = 1ull << 58,
         Windowless = 1ull << 59,
         QuietLog = 1ull << 60,
         VerboseLog = 1ull << 61,
