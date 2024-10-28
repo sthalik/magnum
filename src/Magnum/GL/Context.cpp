@@ -32,6 +32,7 @@
 #include <Corrade/Containers/Reference.h>
 #include <Corrade/Containers/StringIterable.h>
 #include <Corrade/Utility/Arguments.h>
+#include <Corrade/Utility/DebugStream.h>
 #include <Corrade/Utility/DebugStl.h>
 #include <Corrade/Utility/Macros.h> /* CORRADE_THREAD_LOCAL */
 

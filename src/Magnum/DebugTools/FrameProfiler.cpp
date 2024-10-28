@@ -34,6 +34,7 @@
 #include <Corrade/Containers/String.h>
 #include <Corrade/Containers/StringIterable.h>
 #include <Corrade/Containers/StringStl.h> /** @todo drop once Debug is stream-free */
+#include <Corrade/Utility/DebugStream.h>
 #include <Corrade/Utility/Format.h>
 
 #include "Magnum/Math/Functions.h"

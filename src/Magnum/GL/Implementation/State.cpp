@@ -30,6 +30,7 @@
 #include <Corrade/Containers/Pair.h>
 #include <Corrade/Containers/Reference.h>
 #include <Corrade/Utility/Assert.h>
+#include <Corrade/Utility/DebugStream.h>
 
 #include "Magnum/GL/Context.h"
 #include "Magnum/GL/Extensions.h"

@@ -36,6 +36,7 @@
 #include <Corrade/Containers/StringStl.h> /** @todo remove when Debug is stream-free */
 #include <Corrade/Containers/StringIterable.h>
 #include <Corrade/PluginManager/PluginMetadata.h>
+#include <Corrade/Utility/DebugStream.h>
 #include <Corrade/Utility/Format.h>
 #include <Corrade/Utility/String.h> /* replaceAll() */
 #include <Corrade/Utility/ConfigurationGroup.h>

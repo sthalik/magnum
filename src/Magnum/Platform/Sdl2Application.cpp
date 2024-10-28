@@ -45,6 +45,7 @@
 #endif
 #include <Corrade/Utility/Algorithms.h>
 #include <Corrade/Utility/Arguments.h>
+#include <Corrade/Utility/DebugStream.h>
 
 #include "Magnum/Image.h"
 #include "Magnum/ImageView.h"
