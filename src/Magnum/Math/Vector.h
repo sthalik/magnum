@@ -74,7 +74,7 @@ template<class T> constexpr typename std::enable_if<IsScalar<T>::value, T>::type
 namespace Implementation {
     template<std::size_t, class, class> struct VectorConverter;
     /* Needed by DualQuaternion and Functions.h (to avoid dependency between them) */
-    template<class T, class U> T lerp(const T& a, const T& b, U t) {
+    template<class T, class U> constexpr T lerp(const T& a, const T& b, U t) {
         /* While `t*(b - a) + a` is one ALU op less, the following is
            guaranteed to correctly preserves exact boundary values with t being
            0 or 1. See FunctionsTest::lerpLimits() for details. */
@@ -294,7 +294,7 @@ template<std::size_t size, class T> class Vector {
         T* data();
         constexpr const T* data() const; /**< @overload */
         #else
-        auto data() -> T(&)[size] { return _data; }
+        CORRADE_CONSTEXPR14 auto data() -> T(&)[size] { return _data; }
         constexpr auto data() const -> const T(&)[size] { return _data; }
         #endif
 
@@ -303,7 +303,7 @@ template<std::size_t size, class T> class Vector {
          *
          * @see @ref data()
          */
-        T& operator[](std::size_t pos) { return _data[pos]; }
+        CORRADE_CONSTEXPR14 T& operator[](std::size_t pos) { return _data[pos]; }
         constexpr T operator[](std::size_t pos) const { return _data[pos]; } /**< @overload */
 
         /**
@@ -311,7 +311,7 @@ template<std::size_t size, class T> class Vector {
          *
          * @see @ref Math::equal()
          */
-        bool operator==(const Vector<size, T>& other) const {
+        CORRADE_CONSTEXPR14 bool operator==(const Vector<size, T>& other) const {
             for(std::size_t i = 0; i != size; ++i)
                 if(!TypeTraits<T>::equals(_data[i], other._data[i])) return false;
 
@@ -323,7 +323,7 @@ template<std::size_t size, class T> class Vector {
          *
          * @see @ref Math::notEqual()
          */
-        bool operator!=(const Vector<size, T>& other) const {
+        CORRADE_CONSTEXPR14 bool operator!=(const Vector<size, T>& other) const {
             return !operator==(other);
         }
 
