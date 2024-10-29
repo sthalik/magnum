@@ -42,6 +42,11 @@ corrade_add_test(MathVectorTest VectorTest.cpp LIBRARIES MagnumMathTestLib)
 corrade_add_test(MathVector2Test Vector2Test.cpp LIBRARIES MagnumMathTestLib)
 corrade_add_test(MathVector3Test Vector3Test.cpp LIBRARIES MagnumMathTestLib)
 corrade_add_test(MathVector4Test Vector4Test.cpp LIBRARIES MagnumMathTestLib)
+
+corrade_add_test(Cpp14MathVectorTest Cpp14VectorTest.cpp LIBRARIES MagnumMathTestLib)
+set_target_properties(Cpp14MathVectorTest PROPERTIES CORRADE_CXX_STANDARD 14)
+target_compile_definitions(Cpp14MathVectorTest PRIVATE CORRADE_GRACEFUL_ASSERT)
+
 corrade_add_test(MathColorTest ColorTest.cpp LIBRARIES MagnumMathTestLib)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/configure.h.cmake
