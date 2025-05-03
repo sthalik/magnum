@@ -422,6 +422,16 @@ void TypeTraitsTest::equal() {
     CORRADE_VERIFY(Math::notEqual(1, -1));
     CORRADE_VERIFY(!Math::notEqual(1.0f + TypeTraits<Float>::epsilon()/2.0f, 1.0f));
     CORRADE_VERIFY(Math::notEqual(1.0f + TypeTraits<Float>::epsilon()*3.0f, 1.0f));
+
+    /* Constant expression */
+    constexpr bool a = Math::equal(1, 1);
+    constexpr bool b = Math::equal(1, -1);
+    constexpr bool c = Math::notEqual(1, 1);
+    constexpr bool d = Math::notEqual(1, -1);
+    CORRADE_VERIFY(a);
+    CORRADE_VERIFY(!b);
+    CORRADE_VERIFY(!c);
+    CORRADE_VERIFY(d);
 }
 
 }}}}

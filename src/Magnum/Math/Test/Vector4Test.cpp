@@ -32,6 +32,8 @@
 #include "Magnum/Math/StrictWeakOrdering.h"
 #include "Magnum/Math/Swizzle.h"
 
+#include "Cpp14VectorTest.h"
+
 struct Vec4 {
     float x, y, z, w;
 };
@@ -57,6 +59,7 @@ namespace Test { namespace {
 struct Vector4Test: TestSuite::Tester {
     explicit Vector4Test();
 
+#ifndef SKIP_TESTING
     void construct();
     void constructPad();
     void constructDefault();
@@ -83,6 +86,9 @@ struct Vector4Test: TestSuite::Tester {
 
     void swizzleType();
     void debug();
+#else
+    void skipTesting();
+#endif
 };
 
 /* What's a typedef and not a using differs from the typedefs in root Magnum
@@ -92,7 +98,14 @@ using Magnum::Vector3;
 using Magnum::Vector2;
 
 Vector4Test::Vector4Test() {
-    addTests({&Vector4Test::construct,
+#ifndef TESTING_CONSTEXPR
+    setTestName("MathVector4Test");
+#else
+    setTestName("Cpp14MathVector4Test");
+#endif
+    addTests({
+#ifndef SKIP_TESTING
+              &Vector4Test::construct,
               &Vector4Test::constructPad,
               &Vector4Test::constructDefault,
               &Vector4Test::constructNoInit,
@@ -117,9 +130,14 @@ Vector4Test::Vector4Test() {
               &Vector4Test::strictWeakOrdering,
 
               &Vector4Test::swizzleType,
-              &Vector4Test::debug});
+              &Vector4Test::debug
+#else
+              &Vector4Test::skipTesting
+#endif
+    });
 }
 
+#ifndef SKIP_TESTING
 void Vector4Test::construct() {
     constexpr Vector4 a = {1.0f, -2.5f, 3.0f, 4.1f};
     CORRADE_COMPARE(a, (Vector<4, Float>(1.0f, -2.5f, 3.0f, 4.1f)));
@@ -301,7 +319,7 @@ void Vector4Test::convert() {
 }
 
 void Vector4Test::access() {
-    Vector4 vec(1.0f, -2.0f, 5.0f, 0.5f);
+    CE Vector4 vec(1.0f, -2.0f, 5.0f, 0.5f);
     CORRADE_COMPARE(vec.x(), 1.0f);
     CORRADE_COMPARE(vec.r(), 1.0f);
     CORRADE_COMPARE(vec.y(), -2.0f);
@@ -331,7 +349,7 @@ void Vector4Test::access() {
 }
 
 void Vector4Test::threeComponent() {
-    Vector4 a(1.0f, 2.0f, 3.0f, 4.0f);
+    CE Vector4 a(1.0f, 2.0f, 3.0f, 4.0f);
     CORRADE_COMPARE(a.xyz(), Vector3(1.0f, 2.0f, 3.0f));
     CORRADE_COMPARE(a.rgb(), Vector3(1.0f, 2.0f, 3.0f));
 
@@ -347,7 +365,7 @@ void Vector4Test::threeComponent() {
 }
 
 void Vector4Test::twoComponent() {
-    Vector4 a(1.0f, 2.0f, 3.0f, 4.0f);
+    CE Vector4 a(1.0f, 2.0f, 3.0f, 4.0f);
     CORRADE_COMPARE(a.xy(), Vector2(1.0f, 2.0f));
 
     constexpr Vector4 b(1.0f, 2.0f, 3.0f, 4.0f);
@@ -382,9 +400,9 @@ void Vector4Test::multiplyDivideIntegral() {
 }
 
 void Vector4Test::planeEquationThreePoints() {
-    const Vector3 a{1.0f, 0.5f, 3.0f};
-    const Vector3 b{1.5f, 1.5f, 2.5f};
-    const Vector3 c{2.0f, 1.5f, 1.0f};
+    CE const Vector3 a{1.0f, 0.5f, 3.0f};
+    CE const Vector3 b{1.5f, 1.5f, 2.5f};
+    CE const Vector3 c{2.0f, 1.5f, 1.0f};
     const Vector4 eq = Math::planeEquation(a, b, c);
 
     CORRADE_COMPARE(Math::dot(a, eq.xyz()) + eq.w(), 0.0f);
@@ -397,12 +415,12 @@ void Vector4Test::planeEquationThreePoints() {
 }
 
 void Vector4Test::planeEquationNormalPoint() {
-    const Vector3 a{1.0f, 0.5f, 3.0f};
-    const Vector3 normal{-0.9045340f, 0.3015113f, -0.3015113f};
-    const Vector4 eq = Math::planeEquation(normal, a);
+    CE const Vector3 a{1.0f, 0.5f, 3.0f};
+    CE const Vector3 normal{-0.9045340f, 0.3015113f, -0.3015113f};
+    CE const Vector4 eq = Math::planeEquation(normal, a);
 
-    const Vector3 b{1.5f, 1.5f, 2.5f};
-    const Vector3 c{2.0f, 1.5f, 1.0f};
+    CE const Vector3 b{1.5f, 1.5f, 2.5f};
+    CE const Vector3 c{2.0f, 1.5f, 1.0f};
     CORRADE_COMPARE(Math::dot(a, eq.xyz()) + eq.w(), 0.0f);
     CORRADE_COMPARE(Math::dot(b, eq.xyz()) + eq.w(), 0.0f);
     CORRADE_COMPARE(Math::dot(c, eq.xyz()) + eq.w(), 0.0f);
@@ -411,9 +429,9 @@ void Vector4Test::planeEquationNormalPoint() {
 
 void Vector4Test::strictWeakOrdering() {
     StrictWeakOrdering o;
-    const Vector4 v4a{1.0f, 2.0f, 3.0f, 4.0f};
-    const Vector4 v4b{2.0f, 3.0f, 4.0f, 5.0f};
-    const Vector4 v4c{1.0f, 2.0f, 3.0f, 5.0f};
+    CE const Vector4 v4a{1.0f, 2.0f, 3.0f, 4.0f};
+    CE const Vector4 v4b{2.0f, 3.0f, 4.0f, 5.0f};
+    CE const Vector4 v4c{1.0f, 2.0f, 3.0f, 5.0f};
 
     CORRADE_VERIFY( o(v4a, v4b));
     CORRADE_VERIFY(!o(v4b, v4a));
@@ -436,6 +454,11 @@ void Vector4Test::debug() {
     Debug{&out} << Vector4(0.5f, 15.0f, 1.0f, 1.0f);
     CORRADE_COMPARE(out, "Vector(0.5, 15, 1, 1)\n");
 }
+#else
+void Vector4Test::skipTesting() {
+    CORRADE_SKIP("Relaxed constexpr not supported by the compiler.");
+}
+#endif
 
 }}}}
 
