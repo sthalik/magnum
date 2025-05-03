@@ -46,6 +46,7 @@
 #include "Magnum/Math/Angle.h"
 #include "Magnum/Math/BitVector.h"
 #include "Magnum/Math/TypeTraits.h"
+#include "Magnum/Math/ConstantMath.hpp"
 
 #ifdef MAGNUM_BUILD_DEPRECATED
 /* Some APIs returned std::pair before */
@@ -88,6 +89,16 @@ namespace Implementation {
     template<std::size_t, std::size_t> struct GatherComponentAt;
     template<std::size_t, std::size_t, bool> struct ScatterComponentOr;
     template<class T, std::size_t valueSize, char, char...> constexpr T scatterRecursive(const T&, const Vector<valueSize, typename T::Type>&, std::size_t);
+
+template<class T> MAGNUM_CONSTEXPR_SQRT inline T sqrtImpl(T x) {
+    static_assert(IsUnitless<T>::value, "expecting a unitless type");
+#ifdef MAGNUM_HAS_CONSTEXPR_SQRT
+    if (CORRADE_CONSTEVAL)
+        return ConstantMath::sqrt(x);
+#endif
+    return std::sqrt(x);
+}
+
 }
 
 /** @relatesalso Vector
@@ -996,7 +1007,7 @@ template<std::size_t size, class T> class Vector {
          *      @ref Intersection::pointSphere()
          * @todo something like std::hypot() for possibly better precision?
          */
-        T length() const { return T(std::sqrt(dot())); }
+        MAGNUM_CONSTEXPR_SQRT T length() const { return T(Implementation::sqrtImpl(dot())); }
 
         /**
          * @brief Inverse vector length
@@ -1010,7 +1021,7 @@ template<std::size_t size, class T> class Vector {
         #ifndef DOXYGEN_GENERATING_OUTPUT
         template<class U = T, typename std::enable_if<std::is_floating_point<U>::value, int>::type = 0>
         #endif
-        T lengthInverted() const { return T(1)/length(); }
+        MAGNUM_CONSTEXPR_SQRT T lengthInverted() const { return T(1)/length(); }
 
         /**
          * @brief Normalized vector (of unit length)
@@ -1486,7 +1497,7 @@ extern template MAGNUM_EXPORT Debug& operator<<(Debug&, const Vector<4, Double>&
         Math::Vector<size, T>::operator>>=(shift);                          \
         return *this;                                                       \
     }                                                                       \
-    template<class Integral = T, typename std::enable_if<std::is_integral<Integral>::value, int>::type = 0> CORRADE_CONSTEXPR14 constexpr Type_<T> operator>>(typename std::common_type<T>::type shift) const { \
+    template<class Integral = T, typename std::enable_if<std::is_integral<Integral>::value, int>::type = 0> constexpr Type_<T> operator>>(typename std::common_type<T>::type shift) const { \
         return Math::Vector<size, T>::shiftRightInternal(shift, typename Containers::Implementation::GenerateSequence<size>::Type{}); \
     }                                                                       \
                                                                             \
