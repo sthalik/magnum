@@ -59,7 +59,7 @@ for more information.
 @see @ref cross(const Vector2<T>&, const Vector2<T>&), @ref planeEquation(),
     @ref dot(const Vector<size, T>&, const Vector<size, T>&)
 */
-template<class T> inline Vector3<T> cross(const Vector3<T>& a, const Vector3<T>& b) {
+template<class T> constexpr inline Vector3<T> cross(const Vector3<T>& a, const Vector3<T>& b) {
     return {
         a._data[1]*b._data[2] - b._data[1]*a._data[2],
         a._data[2]*b._data[0] - b._data[2]*a._data[0],
@@ -146,7 +146,7 @@ template<class T> class Vector3: public Vector<3, T> {
         constexpr explicit Vector3(ZeroInitT) noexcept: Vector<3, T>{ZeroInit} {}
 
         /** @copydoc Vector::Vector(NoInitT) */
-        explicit Vector3(Magnum::NoInitT) noexcept: Vector<3, T>{Magnum::NoInit} {}
+        CORRADE_CONSTEXPR20 explicit Vector3(Magnum::NoInitT) noexcept: Vector<3, T>{Magnum::NoInit} {}
 
         /** @copydoc Vector::Vector(T) */
         constexpr explicit Vector3(T value) noexcept: Vector<3, T>(value) {}
@@ -256,7 +256,7 @@ template<class T> class Vector3: public Vector<3, T> {
          *
          * @see @ref rg(), @ref gather(), @ref scatter()
          */
-        Vector2<T>& xy() { return Vector2<T>::from(Vector<3, T>::data()); }
+        CORRADE_CONSTEXPR14 Vector2<T>& xy() { return Vector2<T>::from(Vector<3, T>::data()); }
         constexpr const Vector2<T> xy() const {
             return {Vector<3, T>::_data[0], Vector<3, T>::_data[1]};
         } /**< @overload */
@@ -280,7 +280,7 @@ template<class T> class Vector3: public Vector<3, T> {
         _MAGNUM_VECTOR_SUBCLASS_IMPLEMENTATION(3, Vector3)
 
     private:
-        template<class U> friend Vector3<U> cross(const Vector3<U>&, const Vector3<U>&);
+        template<class U> friend constexpr Vector3<U> cross(const Vector3<U>&, const Vector3<U>&);
 };
 
 #ifdef CORRADE_MSVC2015_COMPATIBILITY

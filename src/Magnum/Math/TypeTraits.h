@@ -428,7 +428,7 @@ template<class T
     #ifndef DOXYGEN_GENERATING_OUTPUT
     , typename std::enable_if<IsScalar<T>::value, int>::type = 0
     #endif
-> inline bool equal(T a, T b) {
+> constexpr inline bool equal(T a, T b) {
     return TypeTraits<T>::equals(a, b);
 }
 
@@ -444,7 +444,7 @@ template<class T
     #ifndef DOXYGEN_GENERATING_OUTPUT
     , typename std::enable_if<IsScalar<T>::value, int>::type = 0
     #endif
-> inline bool notEqual(T a, T b) {
+> constexpr inline bool notEqual(T a, T b) {
     return !TypeTraits<T>::equals(a, b);
 }
 
@@ -523,18 +523,19 @@ namespace Implementation {
 template<class T> struct TypeTraitsFloatingPoint: TypeTraitsName<T> {
     TypeTraitsFloatingPoint() = delete;
 
-    static bool equals(T a, T b);
-    static bool equalsZero(T a, T epsilon);
+    static constexpr inline T abs(T x) { return x < 0 ? -x : x; }
+    static CORRADE_CONSTEXPR14 bool equals(T a, T b);
+    static CORRADE_CONSTEXPR14 bool equalsZero(T a, T epsilon);
 };
 
-template<class T> bool TypeTraitsFloatingPoint<T>::equals(const T a, const T b) {
+template<class T> CORRADE_CONSTEXPR14 bool TypeTraitsFloatingPoint<T>::equals(const T a, const T b) {
     /* Shortcut for binary equality (also infinites) */
     if(a == b)
         return true;
 
-    const T absA = std::abs(a);
-    const T absB = std::abs(b);
-    const T difference = std::abs(a - b);
+    const T absA = abs(a);
+    const T absB = abs(b);
+    const T difference = abs(a - b);
 
     /* One of the numbers is zero or both are extremely close to it, relative
        error is meaningless */
@@ -545,12 +546,12 @@ template<class T> bool TypeTraitsFloatingPoint<T>::equals(const T a, const T b) 
     return difference/(absA + absB) < TypeTraits<T>::epsilon();
 }
 
-template<class T> bool TypeTraitsFloatingPoint<T>::equalsZero(const T a, const T magnitude) {
+template<class T> CORRADE_CONSTEXPR14 bool TypeTraitsFloatingPoint<T>::equalsZero(const T a, const T magnitude) {
     /* Shortcut for binary equality */
     if(a == T(0.0))
         return true;
 
-    const T absA = std::abs(a);
+    const T absA = abs(a);
 
     /* The value is extremely close to zero, relative error is meaningless */
     if(absA < TypeTraits<T>::epsilon())
@@ -596,8 +597,8 @@ namespace Implementation {
    [1 - epsilon, 1 + epsilon] or dot() in range [1 - 2*epsilon + epsilon^2,
    1 + 2*epsilon + epsilon^2]. Because epsilon^2 is way off machine precision,
    it's omitted. */
-template<class T> inline bool isNormalizedSquared(T lengthSquared) {
-    return std::abs(lengthSquared - T(1)) < T(2)*TypeTraits<T>::epsilon();
+template<class T> constexpr inline bool isNormalizedSquared(T lengthSquared) {
+    return TypeTraitsFloatingPoint<T>::abs(lengthSquared - T(1)) < T(2)*TypeTraits<T>::epsilon();
 }
 
 }
