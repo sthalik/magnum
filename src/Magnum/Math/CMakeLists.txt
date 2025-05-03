@@ -35,6 +35,7 @@ set(MagnumMath_HEADERS
     Color.h
     ColorBatch.h
     Complex.h
+    ConstantMath.hpp
     Constants.h
     ConfigurationValue.h
     CubicHermite.h

@@ -41,6 +41,7 @@
 
 #include "Magnum/visibility.h"
 #include "Magnum/Math/Vector.h"
+#include "Magnum/Math/ConstantMath.hpp"
 #include "Magnum/DimensionTraits.h"
 
 #ifdef MAGNUM_BUILD_DEPRECATED
@@ -524,13 +525,21 @@ template<class T
     #ifndef DOXYGEN_GENERATING_OUTPUT
     , typename std::enable_if<IsScalar<T>::value, int>::type = 0
     #endif
-> inline T floor(T a) {
+> MAGNUM_CONSTEXPR_FLOOR inline T floor(T a) {
+#ifdef MAGNUM_HAS_CONSTEXPR_FLOOR
+    if (CORRADE_CONSTEVAL)
+        return T(ConstantMath::floor(UnderlyingTypeOf<T>(a)));
+#endif
     return T(std::floor(UnderlyingTypeOf<T>(a)));
 }
 
 /** @overload */
-template<std::size_t size, class T> CORRADE_CONSTEXPR20 inline VectorTypeFor<size, T> floor(const Vector<size, T>& a) {
+template<std::size_t size, class T> MAGNUM_CONSTEXPR_FLOOR inline VectorTypeFor<size, T> floor(const Vector<size, T>& a) {
+    #if CORRADE_CXX_STANDARD >= 202002L
     VectorTypeFor<size, T> out{Magnum::NoInit};
+    #else
+    VectorTypeFor<size, T> out{ZeroInit};
+    #endif
     for(std::size_t i = 0; i != size; ++i)
         out[i] = Math::floor(a[i]);
     return out;
@@ -558,13 +567,21 @@ template<class T
     #ifndef DOXYGEN_GENERATING_OUTPUT
     , typename std::enable_if<IsScalar<T>::value, int>::type = 0
     #endif
-> inline T ceil(T a) {
+> MAGNUM_CONSTEXPR_CEIL inline T ceil(T a) {
+#ifdef MAGNUM_HAS_CONSTEXPR_CEIL
+    if (CORRADE_CONSTEVAL)
+        return T(ConstantMath::ceil(UnderlyingTypeOf<T>(a)));
+#endif
     return T(std::ceil(UnderlyingTypeOf<T>(a)));
 }
 
 /** @overload */
-template<std::size_t size, class T> CORRADE_CONSTEXPR20 inline VectorTypeFor<size, T> ceil(const Vector<size, T>& a) {
+template<std::size_t size, class T> MAGNUM_CONSTEXPR_CEIL inline VectorTypeFor<size, T> ceil(const Vector<size, T>& a) {
+    #if CORRADE_CXX_STANDARD >= 202002L
     VectorTypeFor<size, T> out{Magnum::NoInit};
+    #else
+    VectorTypeFor<size, T> out{ZeroInit};
+    #endif
     for(std::size_t i = 0; i != size; ++i)
         out[i] = Math::ceil(a[i]);
     return out;
@@ -667,7 +684,7 @@ template<class T, class U
     #ifndef DOXYGEN_GENERATING_OUTPUT
     , typename std::enable_if<(IsVector<T>::value || IsScalar<T>::value) && !Implementation::IsBitVectorOrScalar<U>::value, int>::type = 0
     #endif
-> inline T lerp(const T& a, const T& b, U t) {
+> CORRADE_CONSTEXPR14 inline T lerp(const T& a, const T& b, U t) {
     return Implementation::lerp(a, b, t);
 }
 
@@ -685,7 +702,11 @@ component-wise selection from either @p a or @p b based on values in @p t.
 @see @ref Vector::Vector(const BitVector<size>&)
 */
 template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline VectorTypeFor<size, T> lerp(const Vector<size, T>& a, const Vector<size, T>& b, const BitVector<size>& t) {
+    #if CORRADE_CXX_STANDARD >= 202002L
     VectorTypeFor<size, T> out{Magnum::NoInit};
+    #else
+    VectorTypeFor<size, T> out{ZeroInit};
+    #endif
     for(std::size_t i = 0; i != size; ++i)
         out[i] = t[i] ? b[i] : a[i];
     return out;
@@ -887,14 +908,17 @@ template<class T
     #ifndef DOXYGEN_GENERATING_OUTPUT
     , typename std::enable_if<IsScalar<T>::value, int>::type = 0
     #endif
-> inline T sqrt(T a) {
-    static_assert(IsUnitless<T>::value, "expecting a unitless type");
-    return std::sqrt(a);
+> MAGNUM_CONSTEXPR_SQRT inline T sqrt(T a) {
+    return Implementation::sqrtImpl(a);
 }
 
 /** @overload */
-template<std::size_t size, class T> inline Vector<size, T> sqrt(const Vector<size, T>& a) {
+template<std::size_t size, class T> MAGNUM_CONSTEXPR_SQRT inline Vector<size, T> sqrt(const Vector<size, T>& a) {
+    #if CORRADE_CXX_STANDARD >= 202002L
     Vector<size, T> out{Magnum::NoInit};
+    #else
+    Vector<size, T> out{ZeroInit};
+    #endif
     for(std::size_t i = 0; i != size; ++i)
         out[i] = Math::sqrt(a[i]);
     return out;
@@ -911,13 +935,17 @@ template<class T
     #ifndef DOXYGEN_GENERATING_OUTPUT
     , typename std::enable_if<IsScalar<T>::value, int>::type = 0
     #endif
-> inline T sqrtInverted(T a) {
+> MAGNUM_CONSTEXPR_SQRT inline T sqrtInverted(T a) {
     static_assert(IsUnitless<T>::value, "expecting a unitless type");
+#ifdef MAGNUM_HAS_CONSTEXPR_SQRT
+    if (CORRADE_CONSTEVAL)
+        return T(1)/ConstantMath::sqrt(a);
+#endif
     return T(1)/std::sqrt(a);
 }
 
 /** @overload */
-template<std::size_t size, class T> inline Vector<size, T> sqrtInverted(const Vector<size, T>& a) {
+template<std::size_t size, class T> MAGNUM_CONSTEXPR_SQRT inline Vector<size, T> sqrtInverted(const Vector<size, T>& a) {
     return Vector<size, T>(T(1))/Math::sqrt(a);
 }
 
@@ -970,14 +998,14 @@ Wikipedia has a [List of refractive indices](https://en.wikipedia.org/wiki/List_
 @see @ref dot(const Vector<size, T>&, const Vector<size, T>&), @ref reflect(),
     @ref Vector::isNormalized()
 */
-template<std::size_t size, class T> inline Vector<size, T> refract(const Vector<size, T>& vector, const Vector<size, T>& normal, T eta) {
-    CORRADE_DEBUG_ASSERT(vector.isNormalized() && normal.isNormalized(),
-        "Math::refract(): vectors" << vector << "and" << normal << "are not normalized", {});
+template<std::size_t size, class T> MAGNUM_CONSTEXPR_SQRT inline Vector<size, T> refract(const Vector<size, T>& vector, const Vector<size, T>& normal, T eta) {
+    CORRADE_CONSTEXPR_DEBUG_ASSERT(vector.isNormalized() && normal.isNormalized(),
+        "Math::refract(): vectors" << vector << "and" << normal << "are not normalized");
     const T dot = Math::dot(vector, normal);
     const T k  = T(1.0) - eta*eta*(T(1.0) - dot*dot);
     if(k < T(0.0))
         return {};
-    return eta*vector - (eta*dot + std::sqrt(k))*normal;
+    return eta*vector - (eta*dot + Math::sqrt(k))*normal;
 }
 
 }}
