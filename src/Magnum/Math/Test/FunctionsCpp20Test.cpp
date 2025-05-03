@@ -37,6 +37,8 @@ struct FunctionsCpp20Test: TestSuite::Tester {
     void minMaxClampConstexpr();
     void signAbsConstexpr();
     void lerpBitVectorConstexpr();
+    void floorCeilConstexpr();
+    void sqrtConstexpr();
 };
 
 using Magnum::Vector3;
@@ -45,7 +47,9 @@ using Magnum::Vector3i;
 FunctionsCpp20Test::FunctionsCpp20Test() {
     addTests({&FunctionsCpp20Test::minMaxClampConstexpr,
               &FunctionsCpp20Test::signAbsConstexpr,
-              &FunctionsCpp20Test::lerpBitVectorConstexpr});
+              &FunctionsCpp20Test::lerpBitVectorConstexpr,
+              &FunctionsCpp20Test::floorCeilConstexpr,
+              &FunctionsCpp20Test::sqrtConstexpr});
 }
 
 void FunctionsCpp20Test::minMaxClampConstexpr() {
@@ -75,6 +79,26 @@ void FunctionsCpp20Test::signAbsConstexpr() {
 void FunctionsCpp20Test::lerpBitVectorConstexpr() {
     constexpr Vector3i a = Math::lerp(Vector3i{1, 2, 3}, Vector3i{5, 6, 7}, BitVector<3>{5});
     CORRADE_COMPARE(a, (Vector3i{5, 2, 7}));
+}
+
+void FunctionsCpp20Test::floorCeilConstexpr() {
+    #if !defined MAGNUM_HAS_CONSTEXPR_FLOOR || !defined MAGNUM_HAS_CONSTEXPR_CEIL
+    CORRADE_SKIP("Constexpr floor() and ceil() not supported by the compiler.");
+    #else
+    constexpr Vector3 a = Math::floor(Vector3{2.5f, -2.5f, -0.25f});
+    constexpr Vector3 b = Math::ceil(Vector3{2.5f, -2.5f, 0.25f});
+    CORRADE_COMPARE(a, (Vector3{2.0f, -3.0f, -1.0f}));
+    CORRADE_COMPARE(b, (Vector3{3.0f, -2.0f, 1.0f}));
+    #endif
+}
+
+void FunctionsCpp20Test::sqrtConstexpr() {
+    #ifndef MAGNUM_HAS_CONSTEXPR_SQRT
+    CORRADE_SKIP("Constexpr sqrt() not supported by the compiler.");
+    #else
+    constexpr Vector3 a = Math::sqrt(Vector3{16.0f, 2.25f, 0.0f});
+    CORRADE_COMPARE(a, (Vector3{4.0f, 1.5f, 0.0f}));
+    #endif
 }
 
 }}}}
