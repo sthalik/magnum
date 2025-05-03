@@ -41,6 +41,7 @@
 
 #include "Magnum/visibility.h"
 #include "Magnum/Math/Vector.h"
+#include "Magnum/DimensionTraits.h"
 
 #ifdef MAGNUM_BUILD_DEPRECATED
 /* Some APIs returned std::pair before */
@@ -79,7 +80,7 @@ Equivalent to the following, but possibly done in a single CPU instruction:
 
 @snippet Math.cpp div-equivalent
 */
-template<class Integral> inline Containers::Pair<Integral, Integral> div(Integral x, Integral y) {
+template<class Integral> CORRADE_CONSTEXPR14 inline Containers::Pair<Integral, Integral> div(Integral x, Integral y) {
     static_assert(IsIntegral<Integral>::value && IsScalar<Integral>::value,
         "scalar integral type expected");
     const auto result = std::div(x, y);
@@ -313,16 +314,16 @@ template<class T
 > constexpr T min(T value, T min);
 
 /** @overload */
-template<std::size_t size, class T> inline Vector<size, T> min(const Vector<size, T>& value, const Vector<size, T>& min) {
-    Vector<size, T> out{Magnum::NoInit};
+template<std::size_t size, class T> CORRADE_CONSTEXPR20 inline VectorTypeFor<size, T> min(const Vector<size, T>& value, const Vector<size, T>& min) {
+    VectorTypeFor<size, T> out{Magnum::NoInit};
     for(std::size_t i = 0; i != size; ++i)
         out[i] = Math::min(value[i], min[i]);
     return out;
 }
 
 /** @overload */
-template<std::size_t size, class T> inline Vector<size, T> min(const Vector<size, T>& value, T min) {
-    Vector<size, T> out{Magnum::NoInit};
+template<std::size_t size, class T> CORRADE_CONSTEXPR20 inline VectorTypeFor<size, T> min(const Vector<size, T>& value, T min) {
+    VectorTypeFor<size, T> out{Magnum::NoInit};
     for(std::size_t i = 0; i != size; ++i)
         out[i] = Math::min(value[i], min);
     return out;
@@ -344,16 +345,16 @@ template<class T
 > constexpr T max(T a, T b);
 
 /** @overload */
-template<std::size_t size, class T> Vector<size, T> max(const Vector<size, T>& value, const Vector<size, T>& max) {
-    Vector<size, T> out{Magnum::NoInit};
+template<std::size_t size, class T> CORRADE_CONSTEXPR20 VectorTypeFor<size, T> max(const Vector<size, T>& value, const Vector<size, T>& max) {
+    VectorTypeFor<size, T> out{Magnum::NoInit};
     for(std::size_t i = 0; i != size; ++i)
         out[i] = Math::max(value[i], max[i]);
     return out;
 }
 
 /** @overload */
-template<std::size_t size, class T> inline Vector<size, T> max(const Vector<size, T>& value, T max) {
-    Vector<size, T> out{Magnum::NoInit};
+template<std::size_t size, class T> CORRADE_CONSTEXPR20 inline VectorTypeFor<size, T> max(const Vector<size, T>& value, T max) {
+    VectorTypeFor<size, T> out{Magnum::NoInit};
     for(std::size_t i = 0; i != size; ++i)
         out[i] = Math::max(value[i], max);
     return out;
@@ -371,14 +372,14 @@ template<class T
     #ifndef DOXYGEN_GENERATING_OUTPUT
     , typename std::enable_if<IsScalar<T>::value, int>::type = 0
     #endif
-> inline Containers::Pair<T, T> minmax(T a, T b) {
+> constexpr inline Containers::Pair<T, T> minmax(T a, T b) {
     return a < b ? Containers::pair(a, b) : Containers::pair(b, a);
 }
 
 /** @overload */
-template<std::size_t size, class T> inline Containers::Pair<Vector<size, T>, Vector<size, T>> minmax(const Vector<size, T>& a, const Vector<size, T>& b) {
+template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline Containers::Pair<VectorTypeFor<size, T>, VectorTypeFor<size, T>> minmax(const Vector<size, T>& a, const Vector<size, T>& b) {
     using Utility::swap;
-    Containers::Pair<Vector<size, T>, Vector<size, T>> out{a, b};
+    Containers::Pair<VectorTypeFor<size, T>, VectorTypeFor<size, T>> out{a, b};
     for(std::size_t i = 0; i != size; ++i) if(out.first()[i] > out.second()[i])
         swap(out.first()[i], out.second()[i]);
     return out;
@@ -403,16 +404,16 @@ template<class T
 > constexpr T clamp(T value, T min, T max);
 
 /** @overload */
-template<std::size_t size, class T> inline Vector<size, T> clamp(const Vector<size, T>& value, const Vector<size, T>& min, const Vector<size, T>& max) {
-    Vector<size, T> out{Magnum::NoInit};
+template<std::size_t size, class T> CORRADE_CONSTEXPR20 inline VectorTypeFor<size, T> clamp(const Vector<size, T>& value, const Vector<size, T>& min, const Vector<size, T>& max) {
+    VectorTypeFor<size, T> out{Magnum::NoInit};
     for(std::size_t i = 0; i != size; ++i)
         out[i] = Math::clamp(value[i], min[i], max[i]);
     return out;
 }
 
 /** @overload */
-template<std::size_t size, class T> inline Vector<size, T> clamp(const Vector<size, T>& value, T min, T max) {
-    Vector<size, T> out{Magnum::NoInit};
+template<std::size_t size, class T> CORRADE_CONSTEXPR20 inline VectorTypeFor<size, T> clamp(const Vector<size, T>& value, T min, T max) {
+    VectorTypeFor<size, T> out{Magnum::NoInit};
     for(std::size_t i = 0; i != size; ++i)
         out[i] = Math::clamp(value[i], min, max);
     return out;
@@ -427,16 +428,13 @@ template<class T
     #ifndef DOXYGEN_GENERATING_OUTPUT
     , typename std::enable_if<IsScalar<T>::value, int>::type = 0
     #endif
-> inline UnderlyingTypeOf<T> sign(T scalar) {
-    if(scalar > T(0))
-        return UnderlyingTypeOf<T>(1);
-    if(scalar < T(0))
-        return UnderlyingTypeOf<T>(-1);
-    return UnderlyingTypeOf<T>(0);
+> CORRADE_CONSTEXPR14 inline UnderlyingTypeOf<T> sign(T scalar) {
+    using U = UnderlyingTypeOf<T>;
+    return U(U(bool(scalar > T(0))) - U(bool(scalar < T(0))));
 }
 
 /** @overload */
-template<std::size_t size, class T> inline Vector<size, UnderlyingTypeOf<T>> sign(const Vector<size, T>& a) {
+template<std::size_t size, class T> CORRADE_CONSTEXPR20 inline Vector<size, UnderlyingTypeOf<T>> sign(const Vector<size, T>& a) {
     Vector<size, UnderlyingTypeOf<T>> out{Magnum::NoInit};
     for(std::size_t i = 0; i != size; ++i)
         out[i] = Math::sign(a[i]);
@@ -448,13 +446,13 @@ template<class T
     #ifndef DOXYGEN_GENERATING_OUTPUT
     , typename std::enable_if<IsScalar<T>::value, int>::type = 0
     #endif
-> inline T abs(T a) {
-    return T(std::abs(UnderlyingTypeOf<T>(a)));
+> constexpr inline T abs(T a) {
+    return a < T(0) ? -a : a;
 }
 
 /** @overload */
-template<std::size_t size, class T> inline Vector<size, T> abs(const Vector<size, T>& a) {
-    Vector<size, T> out{Magnum::NoInit};
+template<std::size_t size, class T> CORRADE_CONSTEXPR20 inline VectorTypeFor<size, T> abs(const Vector<size, T>& a) {
+    VectorTypeFor<size, T> out{Magnum::NoInit};
     for(std::size_t i = 0; i != size; ++i)
         out[i] = Math::abs(a[i]);
     return out;
@@ -470,8 +468,8 @@ template<class T
 }
 
 /** @overload */
-template<std::size_t size, class T> inline Vector<size, T> floor(const Vector<size, T>& a) {
-    Vector<size, T> out{Magnum::NoInit};
+template<std::size_t size, class T> CORRADE_CONSTEXPR20 inline VectorTypeFor<size, T> floor(const Vector<size, T>& a) {
+    VectorTypeFor<size, T> out{Magnum::NoInit};
     for(std::size_t i = 0; i != size; ++i)
         out[i] = Math::floor(a[i]);
     return out;
@@ -487,8 +485,8 @@ template<class T
 }
 
 /** @overload */
-template<std::size_t size, class T> inline Vector<size, T> round(const Vector<size, T>& a) {
-    Vector<size, T> out{Magnum::NoInit};
+template<std::size_t size, class T> inline VectorTypeFor<size, T> round(const Vector<size, T>& a) {
+    VectorTypeFor<size, T> out{Magnum::NoInit};
     for(std::size_t i = 0; i != size; ++i)
         out[i] = Math::round(a[i]);
     return out;
@@ -504,8 +502,8 @@ template<class T
 }
 
 /** @overload */
-template<std::size_t size, class T> inline Vector<size, T> ceil(const Vector<size, T>& a) {
-    Vector<size, T> out{Magnum::NoInit};
+template<std::size_t size, class T> CORRADE_CONSTEXPR20 inline VectorTypeFor<size, T> ceil(const Vector<size, T>& a) {
+    VectorTypeFor<size, T> out{Magnum::NoInit};
     for(std::size_t i = 0; i != size; ++i)
         out[i] = Math::ceil(a[i]);
     return out;
@@ -540,8 +538,8 @@ template<class T
 @overload
 @m_since_latest
 */
-template<std::size_t size, class T> inline Vector<size, T> fmod(const Vector<size, T>& a, const Vector<size, T>& b) {
-    Vector<size, T> out{Magnum::NoInit};
+template<std::size_t size, class T> inline VectorTypeFor<size, T> fmod(const Vector<size, T>& a, const Vector<size, T>& b) {
+    VectorTypeFor<size, T> out{Magnum::NoInit};
     for(std::size_t i = 0; i != size; ++i)
         out[i] = Math::fmod(a[i], b[i]);
     return out;
@@ -615,7 +613,7 @@ template<class T, class U
 /** @overload
 @m_keyword{mix(),GLSL mix(),}
 */
-template<class T> inline T lerp(const T& a, const T& b, bool t) {
+template<class T> constexpr inline T lerp(const T& a, const T& b, bool t) {
     return t ? b : a;
 }
 
@@ -625,8 +623,8 @@ component-wise selection from either @p a or @p b based on values in @p t.
 @m_keyword{mix(),GLSL mix(),}
 @see @ref Vector::Vector(const BitVector<size>&)
 */
-template<std::size_t size, class T> inline Vector<size, T> lerp(const Vector<size, T>& a, const Vector<size, T>& b, const BitVector<size>& t) {
-    Vector<size, T> out{Magnum::NoInit};
+template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline VectorTypeFor<size, T> lerp(const Vector<size, T>& a, const Vector<size, T>& b, const BitVector<size>& t) {
+    VectorTypeFor<size, T> out{Magnum::NoInit};
     for(std::size_t i = 0; i != size; ++i)
         out[i] = t[i] ? b[i] : a[i];
     return out;
@@ -635,7 +633,7 @@ template<std::size_t size, class T> inline Vector<size, T> lerp(const Vector<siz
 /** @overload
 @m_keyword{mix(),GLSL mix(),}
 */
-template<std::size_t size> inline BitVector<size> lerp(const BitVector<size>& a, const BitVector<size>& b, const BitVector<size>& t) {
+template<std::size_t size> CORRADE_CONSTEXPR14 inline BitVector<size> lerp(const BitVector<size>& a, const BitVector<size>& b, const BitVector<size>& t) {
     /* Not using NoInit because it causes some compilers to report unitialized
        value */
     BitVector<size> out;
@@ -667,12 +665,12 @@ template<class T
     #ifndef DOXYGEN_GENERATING_OUTPUT
     , typename std::enable_if<IsScalar<T>::value, int>::type = 0
     #endif
-> inline UnderlyingTypeOf<T> lerpInverted(T a, T b, T lerp) {
+> CORRADE_CONSTEXPR14 inline UnderlyingTypeOf<T> lerpInverted(T a, T b, T lerp) {
     return (lerp - a)/(b - a);
 }
 
 /** @overload */
-template<std::size_t size, class T> inline Vector<size, UnderlyingTypeOf<T>> lerpInverted(const Vector<size, T>& a, const Vector<size, T>& b, const Vector<size, T>& lerp) {
+template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline VectorTypeFor<size, UnderlyingTypeOf<T>> lerpInverted(const Vector<size, T>& a, const Vector<size, T>& b, const Vector<size, T>& lerp) {
     return (lerp - a)/(b - a);
 }
 
@@ -719,8 +717,8 @@ template<class T
 }
 
 /** @overload */
-template<std::size_t size, class T> inline Vector<size, T> fma(const Vector<size, T>& a, const Vector<size, T>& b, const Vector<size, T>& c) {
-    static_assert(IsUnitless<T>::value, "expecting a unitless type");
+template<std::size_t size, class T> inline VectorTypeFor<size, T> fma(const Vector<size, T>& a, const Vector<size, T>& b, const Vector<size, T>& c) {
+    static_assert(IsUnitless<T>::value, "expecting an unitless type");
     return a*b + c;
 }
 
@@ -882,7 +880,7 @@ calculated as: @f[
     @ref Vector::isNormalized(), @ref Matrix3::reflection(),
     @ref Matrix4::reflection()
 */
-template<std::size_t size, class T> inline Vector<size, T> reflect(const Vector<size, T>& vector, const Vector<size, T>& normal) {
+template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline Vector<size, T> reflect(const Vector<size, T>& vector, const Vector<size, T>& normal) {
     CORRADE_DEBUG_ASSERT(normal.isNormalized(),
         "Math::reflect(): normal" << normal << "is not normalized", {});
     return vector - T(2.0)*dot(vector, normal)*normal;

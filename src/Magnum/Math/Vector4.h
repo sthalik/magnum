@@ -84,7 +84,7 @@ template<class T> class Vector4: public Vector<4, T> {
         /* For some freaking reason doxygen 1.8.17 needs a fully qualified name
            here but GUESS WHAT! Not in the other Vector2/3 classes! Dumpster
            fire! FFS. */
-        explicit Vector4(Magnum::NoInitT) noexcept: Vector<4, T>{Magnum::NoInit} {}
+        CORRADE_CONSTEXPR20 explicit Vector4(Magnum::NoInitT) noexcept: Vector<4, T>{Magnum::NoInit} {}
 
         /** @copydoc Magnum::Math::Vector::Vector(T) */
         /* For some freaking reason doxygen 1.8.17 needs a fully qualified name
@@ -215,7 +215,7 @@ template<class T> class Vector4: public Vector<4, T> {
          *
          * @see @ref rgb(), @ref gather(), @ref scatter()
          */
-        Vector3<T>& xyz() { return Vector3<T>::from(Vector<4, T>::data()); }
+        CORRADE_CONSTEXPR14 Vector3<T>& xyz() { return Vector3<T>::from(Vector<4, T>::data()); }
         constexpr const Vector3<T> xyz() const {
             return {Vector<4, T>::_data[0], Vector<4, T>::_data[1], Vector<4, T>::_data[2]};
         } /**< @overload */
@@ -227,7 +227,7 @@ template<class T> class Vector4: public Vector<4, T> {
          * Equivalent to @ref xyz().
          * @see @ref gather(), @ref scatter()
          */
-        Vector3<T>& rgb() { return Vector3<T>::from(Vector<4, T>::data()); }
+        CORRADE_CONSTEXPR14 Vector3<T>& rgb() { return Vector3<T>::from(Vector<4, T>::data()); }
         constexpr const Vector3<T> rgb() const {
             return {Vector<4, T>::_data[0], Vector<4, T>::_data[1], Vector<4, T>::_data[2]};
         } /**< @overload */
@@ -238,7 +238,7 @@ template<class T> class Vector4: public Vector<4, T> {
          *
          * @see @ref rg(), @ref gather(), @ref scatter()
          */
-        Vector2<T>& xy() { return Vector2<T>::from(Vector<4, T>::data()); }
+        CORRADE_CONSTEXPR14 Vector2<T>& xy() { return Vector2<T>::from(Vector<4, T>::data()); }
         constexpr const Vector2<T> xy() const {
             return {Vector<4, T>::_data[0], Vector<4, T>::_data[1]};
         } /**< @overload */
@@ -287,7 +287,7 @@ when assigning @f$ \boldsymbol{p_i} @f$ to @f$ x @f$, @f$ y @f$, @f$ z @f$. @f[
 @see @ref planeEquation(const Vector3<T>&, const Vector3<T>&), @ref cross(),
     @ref dot()
 */
-template<class T> Vector4<T> planeEquation(const Vector3<T>& p0, const Vector3<T>& p1, const Vector3<T>& p2) {
+template<class T> CORRADE_CONSTEXPR14 Vector4<T> planeEquation(const Vector3<T>& p0, const Vector3<T>& p1, const Vector3<T>& p2) {
     const Vector3<T> normal = Math::cross(p1 - p0, p2 - p0).normalized();
     return {normal, -Math::dot(normal, p0)};
 }
@@ -310,7 +310,7 @@ using a dot product with the normal @f$ \boldsymbol{n} @f$ using the point
 @see @ref planeEquation(const Vector3<T>&, const Vector3<T>&, const Vector3<T>&),
     @ref dot(), @ref Frustum
 */
-template<class T> Vector4<T> planeEquation(const Vector3<T>& normal, const Vector3<T>& point) {
+template<class T> CORRADE_CONSTEXPR14 Vector4<T> planeEquation(const Vector3<T>& normal, const Vector3<T>& point) {
     return {normal, -Math::dot(normal, point)};
 }
 
