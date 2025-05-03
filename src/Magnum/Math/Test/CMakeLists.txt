@@ -29,6 +29,8 @@
 set(CMAKE_FOLDER "Magnum/Math/Test")
 
 corrade_add_test(MathBitVectorTest BitVectorTest.cpp LIBRARIES MagnumMathTestLib)
+corrade_add_test(MathConstantMathTest ConstantMathTest.cpp LIBRARIES MagnumMathTestLib)
+set_target_properties(MathConstantMathTest PROPERTIES CORRADE_CXX_STANDARD 14)
 corrade_add_test(MathConstantsTest ConstantsTest.cpp LIBRARIES MagnumMathTestLib)
 corrade_add_test(MathFunctionsTest FunctionsTest.cpp LIBRARIES MagnumMathTestLib)
 corrade_add_test(MathFunctionsBatchTest FunctionsBatchTest.cpp LIBRARIES MagnumMathTestLib)
