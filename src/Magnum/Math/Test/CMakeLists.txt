@@ -42,6 +42,13 @@ corrade_add_test(MathVectorTest VectorTest.cpp LIBRARIES MagnumMathTestLib)
 corrade_add_test(MathVector2Test Vector2Test.cpp LIBRARIES MagnumMathTestLib)
 corrade_add_test(MathVector3Test Vector3Test.cpp LIBRARIES MagnumMathTestLib)
 corrade_add_test(MathVector4Test Vector4Test.cpp LIBRARIES MagnumMathTestLib)
+
+foreach(_test VectorTest Vector2Test Vector3Test Vector4Test)
+    corrade_add_test(Cpp14Math${_test} ${_test}.cpp LIBRARIES MagnumMathTestLib)
+    set_target_properties(Cpp14Math${_test} PROPERTIES CORRADE_CXX_STANDARD 14)
+    target_compile_definitions(Cpp14Math${_test} PRIVATE TESTING_CONSTEXPR CORRADE_GRACEFUL_ASSERT)
+endforeach()
+
 corrade_add_test(MathColorTest ColorTest.cpp LIBRARIES MagnumMathTestLib)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/configure.h.cmake
@@ -118,6 +125,9 @@ if(NOT CMAKE_CXX_FLAGS MATCHES "-std=")
        (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS "3.4") OR
        (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS "6.0.1") OR
        (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS "19.10"))
+        corrade_add_test(MathTypeTraitsCpp14Test TypeTraitsCpp14Test.cpp LIBRARIES MagnumMathTestLib)
+        set_target_properties(MathTypeTraitsCpp14Test PROPERTIES CXX_STANDARD 14)
+
         corrade_add_test(MathBezierCpp14Test BezierCpp14Test.cpp LIBRARIES MagnumMathTestLib)
         corrade_add_test(MathBitVectorCpp14Test BitVectorCpp14Test.cpp LIBRARIES MagnumMathTestLib)
         corrade_add_test(MathComplexCpp14Test ComplexCpp14Test.cpp LIBRARIES MagnumMathTestLib)
@@ -153,4 +163,15 @@ if(NOT CMAKE_CXX_FLAGS MATCHES "-std=")
             MathVector4Cpp14Test
             PROPERTIES CORRADE_CXX_STANDARD 14)
    endif()
+endif()
+
+if(NOT CMAKE_CXX_FLAGS MATCHES "-std=")
+    # Copied verbatim from src/Corrade/Test/CMakeLists.txt, please keep in sync
+    if((CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS "8.0") OR
+       (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS "6.0") OR
+       (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS "10.0") OR
+       (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS "19.15"))
+        corrade_add_test(MathFunctionsCpp20Test FunctionsCpp20Test.cpp LIBRARIES MagnumMathTestLib)
+        set_target_properties(MathFunctionsCpp20Test PROPERTIES CXX_STANDARD 20)
+    endif()
 endif()

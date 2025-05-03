@@ -34,14 +34,21 @@ struct Vector3Cpp14Test: TestSuite::Tester {
     explicit Vector3Cpp14Test();
 
     void accessConstexpr();
+    void compoundAssignmentConstexpr();
+    void compoundAssignmentIntegralConstexpr();
+    void projectedConstexpr();
 };
 
 /* What's a typedef and not a using differs from the typedefs in root Magnum
    namespace, or is not present there at all */
 using Magnum::Vector3;
+using Magnum::Vector3i;
 
 Vector3Cpp14Test::Vector3Cpp14Test() {
-    addTests({&Vector3Cpp14Test::accessConstexpr});
+    addTests({&Vector3Cpp14Test::accessConstexpr,
+              &Vector3Cpp14Test::compoundAssignmentConstexpr,
+              &Vector3Cpp14Test::compoundAssignmentIntegralConstexpr,
+              &Vector3Cpp14Test::projectedConstexpr});
 }
 
 constexpr Vector3 populate() {
@@ -58,6 +65,39 @@ constexpr Vector3 populate() {
 void Vector3Cpp14Test::accessConstexpr() {
     constexpr Vector3 a = populate();
     CORRADE_COMPARE(a, (Vector3{3.0f, 2.0f, 1.0f}));
+}
+
+constexpr Vector3 compoundAssignment() {
+    Vector3 a{1.0f, 2.0f, 3.0f};
+    ((((((a += Vector3{1.0f}) -= Vector3{0.5f}) *= 2.0f) /= 0.5f)
+        *= Vector3{0.5f, 0.25f, 2.0f}) /= Vector3{3.0f, 0.5f, 7.0f});
+    return a;
+}
+
+void Vector3Cpp14Test::compoundAssignmentConstexpr() {
+    constexpr Vector3 a = compoundAssignment();
+    CORRADE_COMPARE(a, (Vector3{1.0f, 5.0f, 4.0f}));
+}
+
+constexpr Vector3i compoundAssignmentIntegral() {
+    Vector3i a{32, 10, 6};
+    (((((a *= -1.5f) /= -0.75f) *= Vector3{0.5f, -0.25f, 1.5f})
+        /= Vector3{2.0f, -0.5f, 3.0f}) %= 7);
+    ((((((a %= Vector3i{3, 2, 4}) <<= 2) >>= 1) |= Vector3i{1, 8, 3})
+        &= Vector3i{6, 9, 14}) ^= Vector3i{5, 1, 10});
+    return a;
+}
+
+void Vector3Cpp14Test::compoundAssignmentIntegralConstexpr() {
+    constexpr Vector3i a = compoundAssignmentIntegral();
+    CORRADE_COMPARE(a, (Vector3i{1, 9, 12}));
+}
+
+void Vector3Cpp14Test::projectedConstexpr() {
+    constexpr Vector3 a = Vector3{1.0f, 2.0f, 3.0f}.projected(Vector3{1.0f, -1.0f, 0.5f});
+    constexpr Vector3 b = Vector3{1.0f, 2.0f, 3.0f}.projectedOntoNormalized(Vector3{0.0f, 0.6f, 0.8f});
+    CORRADE_COMPARE(a, (Vector3{0.222222f, -0.222222f, 0.111111f}));
+    CORRADE_COMPARE(b, (Vector3{0.0f, 2.16f, 2.88f}));
 }
 
 }}}}

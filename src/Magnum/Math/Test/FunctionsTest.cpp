@@ -76,7 +76,8 @@ struct FunctionsTest: TestSuite::Tester {
     void log2();
     void log();
     void exp();
-    void div();
+    template<class T> void div();
+    template<class T> void divNegative();
     void isInf();
     void isInfVector();
     void isNan();
@@ -144,7 +145,18 @@ FunctionsTest::FunctionsTest() {
               &FunctionsTest::log2,
               &FunctionsTest::log,
               &FunctionsTest::exp,
-              &FunctionsTest::div,
+              &FunctionsTest::div<UnsignedByte>,
+              &FunctionsTest::div<Byte>,
+              &FunctionsTest::div<UnsignedShort>,
+              &FunctionsTest::div<Short>,
+              &FunctionsTest::div<UnsignedInt>,
+              &FunctionsTest::div<Int>,
+              &FunctionsTest::div<UnsignedLong>,
+              &FunctionsTest::div<Long>,
+              &FunctionsTest::divNegative<Byte>,
+              &FunctionsTest::divNegative<Short>,
+              &FunctionsTest::divNegative<Int>,
+              &FunctionsTest::divNegative<Long>,
               &FunctionsTest::isInf,
               &FunctionsTest::isInfVector,
               &FunctionsTest::isNan,
@@ -222,6 +234,10 @@ void FunctionsTest::minmax() {
     CORRADE_COMPARE(Math::minmax(-5.0f, 4.0f), expectedScalar);
     CORRADE_COMPARE(Math::minmax(4.0f, -5.0f), expectedScalar);
 
+    /* Constant expression */
+    constexpr Containers::Pair<Float, Float> c = Math::minmax(4.0f, -5.0f);
+    CORRADE_COMPARE(c, expectedScalar);
+
     const Vector3 a{5.0f, -4.0f, 1.0f};
     const Vector3 b{7.0f, -3.0f, 1.0f};
     const Containers::Pair<Vector3, Vector3> expectedVector{{5.0f, -4.0f, 1.0f}, {7.0f, -3.0f, 1.0f}};
@@ -288,9 +304,39 @@ void FunctionsTest::abs() {
     CORRADE_COMPARE(Math::abs(5), 5);
     CORRADE_COMPARE(Math::abs(Vector3i(5, -3, 2)), Vector3i(5, 3, 2));
 
+    /* Constant expression */
+    constexpr Int a = Math::abs(-5);
+    constexpr Float b = Math::abs(-5.5f);
+    constexpr Deg c = Math::abs(-5.0_degf);
+    CORRADE_COMPARE(a, 5);
+    CORRADE_COMPARE(b, 5.5f);
+    CORRADE_COMPARE(c, 5.0_degf);
+
     /* Wrapped types */
     CORRADE_COMPARE(Math::abs(-5.0_degf), 5.0_degf);
     CORRADE_COMPARE(Math::abs(-5.0_msec), 5.0_msec);
+
+    constexpr Float negativeNan = -Constants::nan();
+    constexpr Double negativeNand = -Math::Constants<Double>::nan();
+    CORRADE_VERIFY(std::signbit(negativeNan));
+    CORRADE_VERIFY(std::signbit(negativeNand));
+    CORRADE_VERIFY(!std::signbit(Math::abs(-0.0f)));
+    CORRADE_VERIFY(!std::signbit(Math::abs(-0.0)));
+    CORRADE_VERIFY(!std::signbit(Math::abs(negativeNan)));
+    CORRADE_VERIFY(!std::signbit(Math::abs(negativeNand)));
+
+    /* In a constant expression only where there's a builtin for it */
+    #if defined CORRADE_TARGET_GCC || defined CORRADE_TARGET_CLANG || \
+        (defined CORRADE_TARGET_MSVC && _MSC_VER >= 1952)
+    constexpr Float zero = Math::abs(-0.0f);
+    constexpr Double zerod = Math::abs(-0.0);
+    constexpr Float nan = Math::abs(negativeNan);
+    constexpr Double nand = Math::abs(negativeNand);
+    CORRADE_VERIFY(!std::signbit(zero));
+    CORRADE_VERIFY(!std::signbit(zerod));
+    CORRADE_VERIFY(!std::signbit(nan));
+    CORRADE_VERIFY(!std::signbit(nand));
+    #endif
 }
 
 void FunctionsTest::floor() {
@@ -463,6 +509,14 @@ void FunctionsTest::lerpBool() {
     CORRADE_COMPARE(Math::lerp(Vector3i{1, 2, 3}, Vector3i{5, 6, 7}, true), (Vector3i{5, 6, 7}));
     CORRADE_COMPARE(Math::lerp(BitVector<3>{5}, BitVector<3>{true}, false), BitVector<3>{5});
 
+    /* Constant expression */
+    constexpr Vector3i a = Math::lerp(Vector3i{1, 2, 3}, Vector3i{5, 6, 7}, true);
+    constexpr BitVector<3> b = Math::lerp(BitVector<3>{5}, BitVector<3>{true}, false);
+    constexpr Float c = Math::lerp(2.0f, 5.0f, true);
+    CORRADE_COMPARE(a, (Vector3i{5, 6, 7}));
+    CORRADE_COMPARE(b, BitVector<3>{5});
+    CORRADE_COMPARE(c, 5.0f);
+
     /* Vector interpolation phase */
     CORRADE_COMPARE(Math::lerp(Vector3i{1, 2, 3}, Vector3i{5, 6, 7}, BitVector<3>(5)), (Vector3i{5, 2, 7}));
     CORRADE_COMPARE(Math::lerp(BitVector<3>{false}, BitVector<3>{true}, BitVector<3>(5)), BitVector<3>{5});
@@ -497,6 +551,12 @@ void FunctionsTest::select() {
     CORRADE_COMPARE(Math::select(2.0f, 5.0f, 1.0f), 5.0f);
     CORRADE_COMPARE(Math::select(2, 5, -0.5f), 2);
     CORRADE_COMPARE(Math::select(2, 5, 1.1f), 5);
+
+    /* Constant expression */
+    constexpr Float c = Math::select(2.0f, 5.0f, 1.0f);
+    constexpr Int d = Math::select(2, 5, -0.5f);
+    CORRADE_COMPARE(c, 5.0f);
+    CORRADE_COMPARE(d, 2);
 
     /* Floating-point vector */
     Vector3 a{-1.0f, 2.0f, 3.0f};
@@ -543,10 +603,36 @@ void FunctionsTest::exp() {
     CORRADE_COMPARE(Math::exp(0.693147f), 2.0f);
 }
 
-void FunctionsTest::div() {
-    Containers::Pair<Int, Int> div = Math::div(57, 6);
-    CORRADE_COMPARE(div.first(), 9);
-    CORRADE_COMPARE(div.second(), 3);
+template<class T> void FunctionsTest::div() {
+    setTestCaseTemplateName(TypeTraits<T>::name());
+
+    Containers::Pair<T, T> div = Math::div(T(57), T(6));
+    CORRADE_COMPARE(div.first(), T(9));
+    CORRADE_COMPARE(div.second(), T(3));
+
+    /* Constant expression */
+    constexpr Containers::Pair<T, T> a = Math::div(T(57), T(6));
+    CORRADE_COMPARE(a.first(), T(9));
+    CORRADE_COMPARE(a.second(), T(3));
+}
+
+template<class T> void FunctionsTest::divNegative() {
+    setTestCaseTemplateName(TypeTraits<T>::name());
+
+    Containers::Pair<T, T> a = Math::div(T(-57), T(6));
+    Containers::Pair<T, T> b = Math::div(T(57), T(-6));
+    CORRADE_COMPARE(a.first(), T(-9));
+    CORRADE_COMPARE(a.second(), T(-3));
+    CORRADE_COMPARE(b.first(), T(-9));
+    CORRADE_COMPARE(b.second(), T(3));
+
+    /* Constant expression */
+    constexpr Containers::Pair<T, T> c = Math::div(T(-57), T(6));
+    constexpr Containers::Pair<T, T> d = Math::div(T(57), T(-6));
+    CORRADE_COMPARE(c.first(), T(-9));
+    CORRADE_COMPARE(c.second(), T(-3));
+    CORRADE_COMPARE(d.first(), T(-9));
+    CORRADE_COMPARE(d.second(), T(3));
 }
 
 void FunctionsTest::isInf() {
