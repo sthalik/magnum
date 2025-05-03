@@ -60,7 +60,7 @@ for more information.
 @see @ref Vector2::perpendicular(),
     @ref dot(const Vector<size, T>&, const Vector<size, T>&)
 */
-template<class T> inline T cross(const Vector2<T>& a, const Vector2<T>& b) {
+template<class T> constexpr inline T cross(const Vector2<T>& a, const Vector2<T>& b) {
     return a._data[0]*b._data[1] - a._data[1]*b._data[0];
 }
 
@@ -126,7 +126,7 @@ template<class T> class Vector2: public Vector<2, T> {
         constexpr explicit Vector2(ZeroInitT) noexcept: Vector<2, T>{ZeroInit} {}
 
         /** @copydoc Vector::Vector(NoInitT) */
-        explicit Vector2(Magnum::NoInitT) noexcept: Vector<2, T>{Magnum::NoInit} {}
+        CORRADE_CONSTEXPR20 explicit Vector2(Magnum::NoInitT) noexcept: Vector<2, T>{Magnum::NoInit} {}
 
         /** @copydoc Vector::Vector(T) */
         constexpr explicit Vector2(T value) noexcept: Vector<2, T>(value) {}
@@ -222,7 +222,7 @@ template<class T> class Vector2: public Vector<2, T> {
          */
         /* For some reason @ref operator-() const doesn't work since 1.8.17 */
         #ifndef DOXYGEN_GENERATING_OUTPUT
-        template<class U = T, typename std::enable_if<std::is_signed<U>::value, int>::type = 0>
+        template<class U = T, typename std::enable_if<std::is_signed<U>::value, int>::type = 0> constexpr
         #endif
         Vector2<T> perpendicular() const { return {-y(), x()}; }
 
@@ -235,14 +235,14 @@ template<class T> class Vector2: public Vector<2, T> {
          * @f]
          */
         #ifndef DOXYGEN_GENERATING_OUTPUT
-        template<class U = T, typename std::enable_if<std::is_floating_point<U>::value, int>::type = 0>
+        template<class U = T, typename std::enable_if<std::is_floating_point<U>::value, int>::type = 0> constexpr
         #endif
         T aspectRatio() const { return x()/y(); }
 
         _MAGNUM_VECTOR_SUBCLASS_IMPLEMENTATION(2, Vector2)
 
     private:
-        template<class U> friend U cross(const Vector2<U>&, const Vector2<U>&);
+        template<class U> friend constexpr U cross(const Vector2<U>&, const Vector2<U>&);
 };
 
 #ifdef CORRADE_MSVC2015_COMPATIBILITY
