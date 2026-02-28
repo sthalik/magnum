@@ -31,6 +31,7 @@
  */
 
 #include <type_traits>
+#include <Corrade/Utility/Macros.h>
 #include <Corrade/Utility/StlMath.h>
 
 #include "Magnum/Math/Math.h"
