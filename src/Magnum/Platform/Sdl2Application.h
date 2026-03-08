@@ -944,6 +944,7 @@ class Sdl2Application {
          * @see @ref framebufferSize()
          */
         Vector2 dpiScaling() const { return _dpiScaling; }
+        Containers::Optional<Vector2> commandLineDpiScaling() const;
 
         /**
          * @brief DPI scaling for given configuration

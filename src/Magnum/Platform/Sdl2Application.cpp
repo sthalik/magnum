@@ -872,6 +872,14 @@ Vector2i Sdl2Application::framebufferSize() const {
 }
 #endif
 
+Containers::Optional<Vector2> Sdl2Application::commandLineDpiScaling() const
+{
+    if (!_commandLineDpiScaling.isZero())
+        return { _commandLineDpiScaling };
+    else
+        return Containers::NullOpt;
+}
+
 #ifdef CORRADE_TARGET_EMSCRIPTEN
 void Sdl2Application::setContainerCssClass(const Containers::StringView cssClass) {
     magnumPlatformSetContainerCssClass(cssClass.data(), cssClass.size());
