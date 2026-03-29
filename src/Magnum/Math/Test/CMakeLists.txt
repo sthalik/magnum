@@ -178,7 +178,11 @@ if(NOT CMAKE_CXX_FLAGS MATCHES "-std=")
        (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS "6.0") OR
        (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS "10.0") OR
        (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS "19.15"))
+        corrade_add_test(MathBitVectorCpp20Test BitVectorCpp20Test.cpp LIBRARIES MagnumMathTestLib)
         corrade_add_test(MathFunctionsCpp20Test FunctionsCpp20Test.cpp LIBRARIES MagnumMathTestLib)
-        set_target_properties(MathFunctionsCpp20Test PROPERTIES CXX_STANDARD 20)
+        set_target_properties(
+            MathBitVectorCpp20Test
+            MathFunctionsCpp20Test
+            PROPERTIES CXX_STANDARD 20)
     endif()
 endif()
