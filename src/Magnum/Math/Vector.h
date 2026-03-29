@@ -333,28 +333,28 @@ template<std::size_t size, class T> class Vector {
          *
          * @m_keyword{lessThan(),GLSL lessThan(),}
          */
-        BitVector<size> operator<(const Vector<size, T>& other) const;
+        CORRADE_CONSTEXPR14 BitVector<size> operator<(const Vector<size, T>& other) const;
 
         /**
          * @brief Component-wise less than or equal comparison
          *
          * @m_keyword{lessThanEqual(),GLSL lessThanEqual(),}
          */
-        BitVector<size> operator<=(const Vector<size, T>& other) const;
+        CORRADE_CONSTEXPR14 BitVector<size> operator<=(const Vector<size, T>& other) const;
 
         /**
          * @brief Component-wise greater than or equal comparison
          *
          * @m_keyword{greaterThanEqual(),GLSL greaterThanEqual(),}
          */
-        BitVector<size> operator>=(const Vector<size, T>& other) const;
+        CORRADE_CONSTEXPR14 BitVector<size> operator>=(const Vector<size, T>& other) const;
 
         /**
          * @brief Component-wise greater than comparison
          *
          * @m_keyword{greaterThan(),GLSL greaterThan(),}
          */
-        BitVector<size> operator>(const Vector<size, T>& other) const;
+        CORRADE_CONSTEXPR14 BitVector<size> operator>(const Vector<size, T>& other) const;
 
         /**
          * @brief Whether the vector is zero
@@ -1538,7 +1538,7 @@ template<std::size_t size, class FloatingPoint, class Integral, typename std::en
     }
 #endif
 
-template<std::size_t size, class T> inline BitVector<size> Vector<size, T>::operator<(const Vector<size, T>& other) const {
+template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline BitVector<size> Vector<size, T>::operator<(const Vector<size, T>& other) const {
     BitVector<size> out;
 
     for(std::size_t i = 0; i != size; ++i)
@@ -1547,7 +1547,7 @@ template<std::size_t size, class T> inline BitVector<size> Vector<size, T>::oper
     return out;
 }
 
-template<std::size_t size, class T> inline BitVector<size> Vector<size, T>::operator<=(const Vector<size, T>& other) const {
+template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline BitVector<size> Vector<size, T>::operator<=(const Vector<size, T>& other) const {
     BitVector<size> out;
 
     for(std::size_t i = 0; i != size; ++i)
@@ -1556,7 +1556,7 @@ template<std::size_t size, class T> inline BitVector<size> Vector<size, T>::oper
     return out;
 }
 
-template<std::size_t size, class T> inline BitVector<size> Vector<size, T>::operator>=(const Vector<size, T>& other) const {
+template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline BitVector<size> Vector<size, T>::operator>=(const Vector<size, T>& other) const {
     BitVector<size> out;
 
     for(std::size_t i = 0; i != size; ++i)
@@ -1565,7 +1565,7 @@ template<std::size_t size, class T> inline BitVector<size> Vector<size, T>::oper
     return out;
 }
 
-template<std::size_t size, class T> inline BitVector<size> Vector<size, T>::operator>(const Vector<size, T>& other) const {
+template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline BitVector<size> Vector<size, T>::operator>(const Vector<size, T>& other) const {
     BitVector<size> out;
 
     for(std::size_t i = 0; i != size; ++i)
