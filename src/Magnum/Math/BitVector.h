@@ -108,7 +108,7 @@ template<std::size_t size> class BitVector {
         constexpr explicit BitVector(ZeroInitT) noexcept: _data{} {}
 
         /** @brief Construct without initializing the contents */
-        explicit BitVector(Magnum::NoInitT) noexcept {}
+        CORRADE_CONSTEXPR20 explicit BitVector(Magnum::NoInitT) noexcept {}
 
         /**
          * @brief Construct a bit vector from segment values
@@ -179,7 +179,7 @@ template<std::size_t size> class BitVector {
          * @brief Reset a bit at given position
          * @m_since_latest
          */
-        BitVector<size>& reset(std::size_t i) {
+        CORRADE_CONSTEXPR14 BitVector<size>& reset(std::size_t i) {
             _data[i/8] &= ~(1 << i%8);
             return *this;
         }
@@ -190,17 +190,17 @@ template<std::size_t size> class BitVector {
          * Prefer to use @ref set(std::size_t) and @ref reset(std::size_t)
          * where possible as that's a simpler operation.
          */
-        BitVector<size>& set(std::size_t i, bool value) {
+        constexpr BitVector<size>& set(std::size_t i, bool value) {
             value ? _data[i/8] |=  (1 << i%8) :
                     _data[i/8] &= ~(1 << i%8);
             return *this;
         }
 
         /** @brief Equality comparison */
-        bool operator==(const BitVector<size>& other) const;
+        CORRADE_CONSTEXPR14 bool operator==(const BitVector<size>& other) const;
 
         /** @brief Non-equality comparison */
-        bool operator!=(const BitVector<size>& other) const {
+        CORRADE_CONSTEXPR14 bool operator!=(const BitVector<size>& other) const {
             return !operator==(other);
         }
 
@@ -224,17 +224,17 @@ template<std::size_t size> class BitVector {
          *
          * @see @ref all(), @ref any(), @ref operator bool()
          */
-        bool none() const;
+        CORRADE_CONSTEXPR14 bool none() const;
 
         /**
          * @brief Whether any bit is set
          *
          * @see @ref all(), @ref none(), @ref operator bool()
          */
-        bool any() const { return !none(); }
+        CORRADE_CONSTEXPR14 bool any() const { return !none(); }
 
         /** @brief Bitwise inversion */
-        BitVector<size> operator~() const;
+        CORRADE_CONSTEXPR14 BitVector<size> operator~() const;
 
         /**
          * @brief Component-wise boolean negation
@@ -243,14 +243,14 @@ template<std::size_t size> class BitVector {
          * Equivalent to @ref operator~(). See @ref Math-BitVector-boolean for
          * more information.
          */
-        BitVector<size> operator!() const { return operator~(); }
+        CORRADE_CONSTEXPR14 BitVector<size> operator!() const { return operator~(); }
 
         /**
          * @brief Bitwise AND and assign
          *
          * The computation is done in-place.
          */
-        BitVector<size>& operator&=(const BitVector<size>& other) {
+        CORRADE_CONSTEXPR14 BitVector<size>& operator&=(const BitVector<size>& other) {
             for(std::size_t i = 0; i != DataSize; ++i)
                 _data[i] &= other._data[i];
 
@@ -262,7 +262,7 @@ template<std::size_t size> class BitVector {
          *
          * @see @ref operator&=()
          */
-        BitVector<size> operator&(const BitVector<size>& other) const {
+        CORRADE_CONSTEXPR14 BitVector<size> operator&(const BitVector<size>& other) const {
             return BitVector<size>(*this) &= other;
         }
 
@@ -273,7 +273,7 @@ template<std::size_t size> class BitVector {
          * Equivalent to @ref operator&(). See @ref Math-BitVector-boolean for
          * more information.
          */
-        BitVector<size> operator&&(const BitVector<size>& other) const {
+        CORRADE_CONSTEXPR14 BitVector<size> operator&&(const BitVector<size>& other) const {
             return BitVector<size>(*this) &= other;
         }
 
@@ -282,7 +282,7 @@ template<std::size_t size> class BitVector {
          *
          * The computation is done in-place.
          */
-        BitVector<size>& operator|=(const BitVector<size>& other) {
+        CORRADE_CONSTEXPR14 BitVector<size>& operator|=(const BitVector<size>& other) {
             for(std::size_t i = 0; i != DataSize; ++i)
                 _data[i] |= other._data[i];
 
@@ -294,7 +294,7 @@ template<std::size_t size> class BitVector {
          *
          * @see @ref operator|=()
          */
-        BitVector<size> operator|(const BitVector<size>& other) const {
+        CORRADE_CONSTEXPR14 BitVector<size> operator|(const BitVector<size>& other) const {
             return BitVector<size>(*this) |= other;
         }
 
@@ -305,7 +305,7 @@ template<std::size_t size> class BitVector {
          * Equivalent to @ref operator|(). See @ref Math-BitVector-boolean for
          * more information.
          */
-        BitVector<size> operator||(const BitVector<size>& other) const {
+        CORRADE_CONSTEXPR14 BitVector<size> operator||(const BitVector<size>& other) const {
             return BitVector<size>(*this) |= other;
         }
 
@@ -314,7 +314,7 @@ template<std::size_t size> class BitVector {
          *
          * The computation is done in-place.
          */
-        BitVector<size>& operator^=(const BitVector<size>& other) {
+        CORRADE_CONSTEXPR14 BitVector<size>& operator^=(const BitVector<size>& other) {
             for(std::size_t i = 0; i != DataSize; ++i)
                 _data[i] ^= other._data[i];
 
@@ -326,7 +326,7 @@ template<std::size_t size> class BitVector {
          *
          * @see @ref operator^=()
          */
-        BitVector<size> operator^(const BitVector<size>& other) const {
+        CORRADE_CONSTEXPR14 BitVector<size> operator^(const BitVector<size>& other) const {
             return BitVector<size>(*this) ^= other;
         }
 
@@ -386,7 +386,7 @@ template<std::size_t size> Debug& operator<<(Debug& debug, const BitVector<size>
 }
 #endif
 
-template<std::size_t size> inline bool BitVector<size>::operator==(const BitVector<size>& other) const {
+template<std::size_t size> CORRADE_CONSTEXPR14 inline bool BitVector<size>::operator==(const BitVector<size>& other) const {
     for(std::size_t i = 0; i != size/8; ++i)
         if(_data[i] != other._data[i])
             return false;
@@ -411,7 +411,7 @@ template<std::size_t size> CORRADE_CONSTEXPR14 inline bool BitVector<size>::all(
     return true;
 }
 
-template<std::size_t size> inline bool BitVector<size>::none() const {
+template<std::size_t size> CORRADE_CONSTEXPR14 inline bool BitVector<size>::none() const {
     /* Check all full segments */
     for(std::size_t i = 0; i != size/8; ++i)
         if(_data[i])
@@ -424,7 +424,7 @@ template<std::size_t size> inline bool BitVector<size>::none() const {
     return true;
 }
 
-template<std::size_t size> inline BitVector<size> BitVector<size>::operator~() const {
+template<std::size_t size> CORRADE_CONSTEXPR14 inline BitVector<size> BitVector<size>::operator~() const {
     BitVector<size> out{Magnum::NoInit};
 
     for(std::size_t i = 0; i != DataSize; ++i)
