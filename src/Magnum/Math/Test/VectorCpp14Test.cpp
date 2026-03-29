@@ -35,6 +35,7 @@ struct VectorCpp14Test: TestSuite::Tester {
 
     void accessConstexpr();
     void compareConstexpr();
+    void compareComponentWiseConstexpr();
     void isZeroConstexpr();
     void isNormalizedConstexpr();
     void addSubtractConstexpr();
@@ -58,6 +59,7 @@ typedef Vector<4, Int> Vector4i;
 VectorCpp14Test::VectorCpp14Test() {
     addTests({&VectorCpp14Test::accessConstexpr,
               &VectorCpp14Test::compareConstexpr,
+              &VectorCpp14Test::compareComponentWiseConstexpr,
               &VectorCpp14Test::isZeroConstexpr,
               &VectorCpp14Test::isNormalizedConstexpr,
               &VectorCpp14Test::addSubtractConstexpr,
@@ -95,6 +97,22 @@ void VectorCpp14Test::compareConstexpr() {
     CORRADE_VERIFY(d);
     CORRADE_VERIFY(e);
     CORRADE_VERIFY(!f);
+}
+
+void VectorCpp14Test::compareComponentWiseConstexpr() {
+    /* Same condition as MAGNUM_BITVECTOR_SET_CONSTEXPR14 in BitVector.h */
+    #if defined(CORRADE_TARGET_GCC) && !defined(CORRADE_TARGET_CLANG) && __GNUC__*100 + __GNUC_MINOR__ < 602
+    CORRADE_SKIP("Constexpr BitVector::set() not supported by the compiler.");
+    #else
+    constexpr BitVector<3> a = Vector3{1.0f, -1.0f, 5.0f} < Vector3{1.1f, -1.0f, 3.0f};
+    constexpr BitVector<3> b = Vector3{1.0f, -1.0f, 5.0f} <= Vector3{1.1f, -1.0f, 3.0f};
+    constexpr BitVector<3> c = Vector3{1.0f, -1.0f, 5.0f} >= Vector3{1.1f, -1.0f, 3.0f};
+    constexpr BitVector<3> d = Vector3{1.0f, -1.0f, 5.0f} > Vector3{1.1f, -1.0f, 3.0f};
+    CORRADE_COMPARE(a, BitVector<3>{0x1});
+    CORRADE_COMPARE(b, BitVector<3>{0x3});
+    CORRADE_COMPARE(c, BitVector<3>{0x6});
+    CORRADE_COMPARE(d, BitVector<3>{0x4});
+    #endif
 }
 
 void VectorCpp14Test::isZeroConstexpr() {
