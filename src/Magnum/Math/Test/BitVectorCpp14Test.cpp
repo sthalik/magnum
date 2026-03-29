@@ -37,6 +37,12 @@ struct BitVectorCpp14Test: TestSuite::Tester {
     void setConstexpr();
     void convertBoolConstexpr();
     void allConstexpr();
+    void resetConstexpr();
+    void compareConstexpr();
+    void noneConstexpr();
+    void anyConstexpr();
+    void bitInverseConstexpr();
+    void bitAndOrXorConstexpr();
 };
 
 /* What's a typedef and not a using differs from the typedefs in root Magnum
@@ -47,7 +53,13 @@ BitVectorCpp14Test::BitVectorCpp14Test() {
     addTests({&BitVectorCpp14Test::accessConstexpr,
               &BitVectorCpp14Test::setConstexpr,
               &BitVectorCpp14Test::convertBoolConstexpr,
-              &BitVectorCpp14Test::allConstexpr});
+              &BitVectorCpp14Test::allConstexpr,
+              &BitVectorCpp14Test::resetConstexpr,
+              &BitVectorCpp14Test::compareConstexpr,
+              &BitVectorCpp14Test::noneConstexpr,
+              &BitVectorCpp14Test::anyConstexpr,
+              &BitVectorCpp14Test::bitInverseConstexpr,
+              &BitVectorCpp14Test::bitAndOrXorConstexpr});
 }
 
 /* Same condition as MAGNUM_BITVECTOR_SET_CONSTEXPR14 in BitVector.h */
@@ -99,6 +111,93 @@ void BitVectorCpp14Test::allConstexpr() {
     CORRADE_VERIFY(a);
     CORRADE_VERIFY(b);
     CORRADE_VERIFY(!c);
+}
+
+#ifndef SKIP_CONSTEXPR_SET
+constexpr BitVector19 resetBit() {
+    BitVector19 a{0x08, 0x83, 0x04};
+    a.reset(15);
+    return a;
+}
+
+constexpr BitVector19 setBitValue(bool value) {
+    BitVector19 a{0x08, 0x03, 0x04};
+    a.set(15, value);
+    a.set(3, value);
+    return a;
+}
+#endif
+
+void BitVectorCpp14Test::resetConstexpr() {
+    #ifdef SKIP_CONSTEXPR_SET
+    CORRADE_SKIP("Constexpr reset() and set() not supported by the compiler.");
+    #else
+    constexpr BitVector19 a = resetBit();
+    constexpr BitVector19 b = setBitValue(true);
+    constexpr BitVector19 c = setBitValue(false);
+    CORRADE_COMPARE(a, (BitVector19{0x08, 0x03, 0x04}));
+    CORRADE_COMPARE(b, (BitVector19{0x08, 0x83, 0x04}));
+    CORRADE_COMPARE(c, (BitVector19{0x00, 0x03, 0x04}));
+    #endif
+}
+
+void BitVectorCpp14Test::compareConstexpr() {
+    constexpr bool a = BitVector19{0xa5, 0x5f, 0x07} == BitVector19{0xa5, 0x5f, 0x07};
+    constexpr bool b = BitVector19{0xa5, 0x5f, 0x07} != BitVector19{0xa5, 0x98, 0x07};
+    constexpr bool c = BitVector19{0xa5, 0x5f, 0x07} != BitVector19{0xa5, 0x5f, 0x06};
+    constexpr bool d = BitVector19{0xa5, 0x5f, 0x07} != BitVector19{0xa5, 0x5f, 0x07};
+    CORRADE_VERIFY(a);
+    CORRADE_VERIFY(b);
+    CORRADE_VERIFY(c);
+    CORRADE_VERIFY(!d);
+}
+
+void BitVectorCpp14Test::noneConstexpr() {
+    constexpr bool a = BitVector19{0x00, 0x00, 0x00}.none();
+    constexpr bool b = BitVector19{0x00, 0x00, 0x08}.none();
+    constexpr bool c = BitVector19{0x00, 0x00, 0x04}.none();
+    CORRADE_VERIFY(a);
+    CORRADE_VERIFY(b);
+    CORRADE_VERIFY(!c);
+}
+
+void BitVectorCpp14Test::anyConstexpr() {
+    constexpr bool a = BitVector19{0x00, 0x01, 0x00}.any();
+    constexpr bool b = BitVector19{0x00, 0x00, 0x04}.any();
+    constexpr bool c = BitVector19{0x00, 0x00, 0x08}.any();
+    CORRADE_VERIFY(a);
+    CORRADE_VERIFY(b);
+    CORRADE_VERIFY(!c);
+}
+
+void BitVectorCpp14Test::bitInverseConstexpr() {
+    constexpr BitVector19 a = ~BitVector19{0xa5, 0x5f, 0x03};
+    constexpr BitVector19 b = !BitVector19{0xa5, 0x5f, 0x03};
+    CORRADE_COMPARE(a, (BitVector19{0x5a, 0xa0, 0x04}));
+    CORRADE_COMPARE(b, (BitVector19{0x5a, 0xa0, 0x04}));
+}
+
+constexpr BitVector19 andOrXorAssign() {
+    BitVector19 a{0xa5, 0x5f, 0x03};
+    a &= BitVector19{0x37, 0xf3, 0x06};
+    a |= BitVector19{0x80, 0x04, 0x01};
+    a ^= BitVector19{0xff, 0x0f, 0x01};
+    return a;
+}
+
+void BitVectorCpp14Test::bitAndOrXorConstexpr() {
+    constexpr BitVector19 a = BitVector19{0xa5, 0x5f, 0x03} & BitVector19{0x37, 0xf3, 0x06};
+    constexpr BitVector19 b = BitVector19{0xa5, 0x5f, 0x03} && BitVector19{0x37, 0xf3, 0x06};
+    constexpr BitVector19 c = BitVector19{0xa5, 0x5f, 0x03} | BitVector19{0x37, 0xf3, 0x06};
+    constexpr BitVector19 d = BitVector19{0xa5, 0x5f, 0x03} || BitVector19{0x37, 0xf3, 0x06};
+    constexpr BitVector19 e = BitVector19{0xa5, 0x5f, 0x03} ^ BitVector19{0x37, 0xf3, 0x06};
+    constexpr BitVector19 f = andOrXorAssign();
+    CORRADE_COMPARE(a, (BitVector19{0x25, 0x53, 0x02}));
+    CORRADE_COMPARE(b, (BitVector19{0x25, 0x53, 0x02}));
+    CORRADE_COMPARE(c, (BitVector19{0xb7, 0xff, 0x07}));
+    CORRADE_COMPARE(d, (BitVector19{0xb7, 0xff, 0x07}));
+    CORRADE_COMPARE(e, (BitVector19{0x92, 0xac, 0x05}));
+    CORRADE_COMPARE(f, (BitVector19{0x5a, 0x58, 0x02}));
 }
 
 }}}}
