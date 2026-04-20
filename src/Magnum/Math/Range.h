@@ -191,7 +191,7 @@ template<UnsignedInt dimensions, class T> class Range {
          * @ref TypeTraits::equals(), i.e. a fuzzy compare for floating-point
          * types.
          */
-        bool operator==(const Range<dimensions, T>& other) const;
+        constexpr bool operator==(const Range<dimensions, T>& other) const;
 
         /**
          * @brief Non-equality comparison
@@ -200,7 +200,7 @@ template<UnsignedInt dimensions, class T> class Range {
          * @ref TypeTraits::equals(), i.e. a fuzzy compare for floating-point
          * types.
          */
-        bool operator!=(const Range<dimensions, T>& other) const {
+        constexpr bool operator!=(const Range<dimensions, T>& other) const {
             return !operator==(other);
         }
 
@@ -897,7 +897,7 @@ extern template MAGNUM_EXPORT Debug& operator<<(Debug&, const Range<3, Double>&)
 #endif
 #endif
 
-template<UnsignedInt dimensions, class T> inline bool Range<dimensions, T>::operator==(const Range<dimensions, T>& other) const {
+template<UnsignedInt dimensions, class T> constexpr inline bool Range<dimensions, T>::operator==(const Range<dimensions, T>& other) const {
     /* For non-scalar types default implementation of TypeTraits would be used,
        which is just operator== */
     return TypeTraits<VectorType>::equals(_min, other._min) &&
