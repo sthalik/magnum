@@ -37,6 +37,7 @@ struct RangeCpp14Test: TestSuite::Tester {
     /* Range1D doesn't have any dedicated getters on top of the generic base */
     void accessConstexpr2D();
     void accessConstexpr3D();
+    void compareConstexpr();
 };
 
 /* What's a typedef and not a using differs from the typedefs in root Magnum
@@ -48,7 +49,8 @@ using Magnum::Range3D;
 RangeCpp14Test::RangeCpp14Test() {
     addTests({&RangeCpp14Test::accessConstexpr,
               &RangeCpp14Test::accessConstexpr2D,
-              &RangeCpp14Test::accessConstexpr3D});
+              &RangeCpp14Test::accessConstexpr3D,
+              &RangeCpp14Test::compareConstexpr});
 }
 
 constexpr Range2D populate() {
@@ -95,6 +97,24 @@ constexpr Range3D populate3D() {
 void RangeCpp14Test::accessConstexpr3D() {
     constexpr Range3D a = populate3D();
     CORRADE_COMPARE(a, (Range3D{{1.0f, 0.0f, 4.0f}, {2.0f, 3.0f, 5.0f}}));
+}
+
+void RangeCpp14Test::compareConstexpr() {
+    constexpr bool a = Range2Di{{34, 23}, {47, 30}} == Range2Di{{34, 23}, {47, 30}};
+    constexpr bool b = Range2Di{{34, 23}, {47, 30}} != Range2Di{{34, 23}, {48, 30}};
+    constexpr bool c = Range2Di{{34, 23}, {47, 30}} != Range2Di{{35, 23}, {47, 30}};
+    constexpr bool d = Range2Di{{34, 23}, {47, 30}} != Range2Di{{34, 23}, {47, 30}};
+    constexpr bool e = Range1D{1.0f, 1.0f} != Range1D{1.0f + TypeTraits<Float>::epsilon()*2, 1.0f};
+    constexpr bool f = Range1D{1.0f, 1.0f} != Range1D{1.0f, 1.0f + TypeTraits<Float>::epsilon()*2};
+    constexpr bool g = Range1D{1.0f, 1.0f} == Range1D{1.0f + TypeTraits<Float>::epsilon()/2.0f,
+                                                      1.0f + TypeTraits<Float>::epsilon()/2.0f};
+    CORRADE_VERIFY(a);
+    CORRADE_VERIFY(b);
+    CORRADE_VERIFY(c);
+    CORRADE_VERIFY(!d);
+    CORRADE_VERIFY(e);
+    CORRADE_VERIFY(f);
+    CORRADE_VERIFY(g);
 }
 
 }}}}
