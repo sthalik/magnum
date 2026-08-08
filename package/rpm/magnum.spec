@@ -1,7 +1,7 @@
 Name: magnum
 URL: http://magnum.graphics
 Version: 2020.06.2972.g8b832382a
-Release: 1
+Release: 1%{?dist}
 Summary: C++11 graphics middleware for games and data visualization
 License: MIT
 Source: %{name}-%{version}.tar.gz
