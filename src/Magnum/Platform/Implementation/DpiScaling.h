@@ -30,6 +30,10 @@
 
 #include "Magnum/Magnum.h"
 
+#ifdef _MAGNUM_PLATFORM_USE_X11
+#include <iosfwd>
+#endif
+
 namespace Magnum { namespace Platform { namespace Implementation {
 
 Utility::Arguments windowScalingArguments();
@@ -38,7 +42,7 @@ Utility::Arguments windowScalingArguments();
 /* Returns DPI scaling for current X11 instance. Because X11 (as opposed to
    Wayland) doesn't have per-monitor scaling, it's fetched from the default
    display. */
-Float x11DpiScaling();
+Float x11DpiScaling(std::ostream* output);
 #endif
 
 #ifdef CORRADE_TARGET_EMSCRIPTEN

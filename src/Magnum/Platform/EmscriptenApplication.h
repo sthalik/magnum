@@ -577,7 +577,7 @@ class EmscriptenApplication {
          * more information.
          * @see @ref framebufferSize(), @ref devicePixelRatio()
          */
-        Vector2 dpiScaling() const;
+        Vector2 dpiScaling() const { return _dpiScaling; }
 
         /**
          * @brief DPI scaling for given configuration
@@ -1126,8 +1126,6 @@ class EmscriptenApplication {
         typedef Containers::EnumSet<Flag> Flags;
         CORRADE_ENUMSET_FRIEND_OPERATORS(Flags)
 
-        Vector2 dpiScalingInternal(const Vector2& configurationDpiScaling) const;
-
         void handleCanvasResize(const EmscriptenUiEvent* event);
         /* Sorry, but can't use Configuration::WindowFlags here :( */
         void setupCallbacks(bool resizable);
@@ -1165,10 +1163,14 @@ class EmscriptenApplication {
         Containers::Optional<Platform::GLContext> _context;
         #endif
 
-        /* These are saved from command-line arguments, and from configuration
-           to be reused in dpiScaling() and viewportEvent() later */
+        /* These are saved from command-line arguments. Unlike with SDL or
+           GLFW, the _dpiScaling value is based on values set on startup and
+           thus cannot change afterwards, so we don't need to save any input
+           values coming from configuration, only the calculated result. What
+           *can* change is the device pixel ratio, which is tracked in
+           _lastKnownDevicePixelRatio above. */
         bool _verboseLog{};
-        Vector2 _commandLineDpiScaling, _configurationDpiScaling;
+        Vector2 _commandLineDpiScaling, _dpiScaling;
 
         /* Animation frame callback */
         int (*_callback)(void*);

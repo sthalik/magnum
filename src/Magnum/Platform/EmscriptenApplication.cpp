@@ -290,20 +290,16 @@ void EmscriptenApplication::create(const Configuration& configuration, const GLC
 #endif
 
 Vector2 EmscriptenApplication::dpiScaling(const Configuration& configuration) const {
-    return dpiScalingInternal(configuration.dpiScaling());
-}
-
-Vector2 EmscriptenApplication::dpiScalingInternal(const Vector2& configurationDpiScaling) const {
-    std::ostream* verbose = _verboseLog ? Debug::output() : nullptr;
+    std::ostream* const verbose = _verboseLog ? Debug::output() : nullptr;
 
     /* Use values from the configuration only if not overridden on command line.
        In any case explicit scaling has a precedence before the policy. */
     if(!_commandLineDpiScaling.isZero()) {
         Debug{verbose} << "Platform::EmscriptenApplication: user-defined DPI scaling" << _commandLineDpiScaling;
         return _commandLineDpiScaling;
-    } else if(!configurationDpiScaling.isZero()) {
-        Debug{verbose} << "Platform::EmscriptenApplication: app-defined DPI scaling" << configurationDpiScaling;
-        return configurationDpiScaling;
+    } else if(!configuration.dpiScaling().isZero()) {
+        Debug{verbose} << "Platform::EmscriptenApplication: app-defined DPI scaling" << configuration.dpiScaling();
+        return configuration.dpiScaling();
     }
 
     /* Unlike Sdl2Application, not taking device pixel ratio into account
@@ -334,6 +330,10 @@ bool EmscriptenApplication::tryCreate(const Configuration& configuration) {
     _lastKnownCanvasSize = windowSize();
     _lastKnownDevicePixelRatio = devicePixelRatio();
 
+    /* Device pixel ratio together with DPI scaling (which is 1.0 by default)
+       defines framebuffer size. See class docs for why it's done like that. */
+    Debug{verbose} << "Platform::EmscriptenApplication: device pixel ratio" << _lastKnownDevicePixelRatio.x();
+
     /* By default Emscripten creates a 300x150 canvas. That's so freaking
        random I'm getting mad. Use the real (CSS pixels) canvas size instead,
        if the size is not hardcoded from the configuration. This is then
@@ -349,12 +349,12 @@ bool EmscriptenApplication::tryCreate(const Configuration& configuration) {
         Debug{verbose} << "Platform::EmscriptenApplication::tryCreate(): autodetected canvas size" << canvasSize;
     }
 
-    /* Save DPI scaling value from configuration for future use. Device pixel
-       ratio together with DPI scaling (which is 1.0 by default) defines
-       framebuffer size. See class docs for why it's done like that. */
-    _configurationDpiScaling = configuration.dpiScaling();
-    Debug{verbose} << "Platform::EmscriptenApplication: device pixel ratio" << _lastKnownDevicePixelRatio.x();
-    const Vector2i scaledCanvasSize = canvasSize*dpiScaling(configuration)*_lastKnownDevicePixelRatio;
+    /* Save DPI scaling value from configuration for future use. Unlike with
+       device pixel ratio, the DPI scaling value is only based on values set on
+       startup so unlike SDL or GLFW we don't need to remember the inputs and
+       also never need to update it afterwards. */
+    _dpiScaling = dpiScaling(configuration);
+    const Vector2i scaledCanvasSize = canvasSize*_dpiScaling*_lastKnownDevicePixelRatio;
     emscripten_set_canvas_element_size(_canvasTarget.data(), scaledCanvasSize.x(), scaledCanvasSize.y());
 
     setupCallbacks(!!(configuration.windowFlags() & Configuration::WindowFlag::Resizable));
@@ -414,6 +414,10 @@ bool EmscriptenApplication::tryCreate(const Configuration& configuration, const 
     _lastKnownCanvasSize = windowSize();
     _lastKnownDevicePixelRatio = devicePixelRatio();
 
+    /* Device pixel ratio together with DPI scaling (which is 1.0 by default)
+       defines framebuffer size. See class docs for why it's done like that. */
+    Debug{verbose} << "Platform::EmscriptenApplication: device pixel ratio" << _lastKnownDevicePixelRatio.x();
+
     /* By default Emscripten creates a 300x150 canvas. That's so freaking
        random I'm getting mad. Use the real (CSS pixels) canvas size instead,
        if the size is not hardcoded from the configuration. This is then
@@ -429,12 +433,12 @@ bool EmscriptenApplication::tryCreate(const Configuration& configuration, const 
         Debug{verbose} << "Platform::EmscriptenApplication::tryCreate(): autodetected canvas size" << canvasSize;
     }
 
-    /* Save DPI scaling value from configuration for future use. Device pixel
-       ratio together with DPI scaling (which is 1.0 by default) defines
-       framebuffer size. See class docs for why it's done like that. */
-    _configurationDpiScaling = configuration.dpiScaling();
-    Debug{verbose} << "Platform::EmscriptenApplication: device pixel ratio" << _lastKnownDevicePixelRatio.x();
-    const Vector2i scaledCanvasSize = canvasSize*dpiScaling(configuration)*_lastKnownDevicePixelRatio;
+    /* Save DPI scaling value from configuration for future use. Unlike with
+       device pixel ratio, the DPI scaling value is only based on values set on
+       startup so unlike SDL or GLFW we don't need to remember the inputs and
+       also never need to update it afterwards. */
+    _dpiScaling = dpiScaling(configuration);
+    const Vector2i scaledCanvasSize = canvasSize*_dpiScaling*_lastKnownDevicePixelRatio;
     emscripten_set_canvas_element_size(_canvasTarget.data(), scaledCanvasSize.x(), scaledCanvasSize.y());
 
     /* Create WebGL context */
@@ -472,10 +476,6 @@ Vector2i EmscriptenApplication::framebufferSize() const {
 }
 #endif
 
-Vector2 EmscriptenApplication::dpiScaling() const {
-    return dpiScalingInternal(_configurationDpiScaling);
-}
-
 Vector2 EmscriptenApplication::devicePixelRatio() const {
     return Vector2{Float(emscripten_get_device_pixel_ratio())};
 }
@@ -504,14 +504,17 @@ void EmscriptenApplication::handleCanvasResize(const EmscriptenUiEvent* event) {
     if(canvasSize != _lastKnownCanvasSize || devicePixelRatio != _lastKnownDevicePixelRatio) {
         _lastKnownCanvasSize = canvasSize;
         _lastKnownDevicePixelRatio = devicePixelRatio;
-        const Vector2 dpiScaling = this->dpiScaling();
-        const Vector2i size = canvasSize*dpiScaling*devicePixelRatio;
+        /* Compared to SDL2 or GLFW, here we're *not* refreshing the DPI
+           scaling value, as it's hardcoded on startup and thus cannot change
+           in response to window size change. Only the device pixel ratio can
+           change. */
+        const Vector2i size = canvasSize*_dpiScaling*_lastKnownDevicePixelRatio;
         emscripten_set_canvas_element_size(_canvasTarget.data(), size.x(), size.y());
         ViewportEvent e{event, canvasSize,
             #ifdef MAGNUM_TARGET_GL
             framebufferSize(),
             #endif
-            dpiScaling, devicePixelRatio};
+            _dpiScaling, _lastKnownDevicePixelRatio};
         viewportEvent(e);
 
         /* Can't say just _flags | Flag::Redraw because in case the

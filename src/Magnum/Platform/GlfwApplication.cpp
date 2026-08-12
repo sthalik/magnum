@@ -191,8 +191,9 @@ Vector2 GlfwApplication::dpiScaling(const Configuration& configuration) {
     return dpiScalingInternal(configuration.dpiScalingPolicy(), configuration.dpiScaling());
 }
 
-Vector2 GlfwApplication::dpiScalingInternal(const Implementation::GlfwDpiScalingPolicy configurationDpiScalingPolicy, const Vector2& configurationDpiScaling) const {
-    std::ostream* verbose = _verboseLog ? Debug::output() : nullptr;
+Vector2 GlfwApplication::dpiScalingInternal(const Implementation::GlfwDpiScalingPolicy configurationDpiScalingPolicy, const Vector2& configurationDpiScaling, const bool silentLog) const {
+    std::ostream* const output = silentLog ? nullptr : Debug::output();
+    std::ostream* const verbose = _verboseLog && !silentLog ? Debug::output() : nullptr;
 
     /* Use values from the configuration only if not overridden on command line
        to something non-default. In any case explicit scaling has a precedence
@@ -234,7 +235,7 @@ Vector2 GlfwApplication::dpiScalingInternal(const Implementation::GlfwDpiScaling
            SDL anyway. So keeping it to reduce the chance for unexpected minor
            differences across app implementations. */
         #ifdef _MAGNUM_PLATFORM_USE_X11
-        const Vector2 dpiScaling{Implementation::x11DpiScaling()};
+        const Vector2 dpiScaling{Implementation::x11DpiScaling(output)};
         if(!dpiScaling.isZero()) {
             Debug{verbose} << "Platform::GlfwApplication: virtual DPI scaling" << dpiScaling.x();
             return dpiScaling;
@@ -371,11 +372,12 @@ bool GlfwApplication::tryCreate(const Configuration& configuration) {
 
     CORRADE_ASSERT(!_window, "Platform::GlfwApplication::tryCreate(): window already created", false);
 
-    /* Save DPI scaling values from configuration for future use, scale window
-       based on those */
+    /* Save DPI scaling values from configuration for future use in viewport
+       events, scale window based on those */
     _configurationDpiScalingPolicy = configuration.dpiScalingPolicy();
     _configurationDpiScaling = configuration.dpiScaling();
-    const Vector2i scaledWindowSize = configuration.size()*dpiScaling(configuration);
+    _dpiScaling = dpiScalingInternal(_configurationDpiScalingPolicy, _configurationDpiScaling);
+    const Vector2i scaledWindowSize = configuration.size()*_dpiScaling;
 
     /* Window flags */
     GLFWmonitor* monitor = nullptr; /* Needed for setting fullscreen */
@@ -449,11 +451,12 @@ bool GlfwApplication::tryCreate(const Configuration& configuration, const GLConf
     CORRADE_ASSERT(!_window && _context->version() == GL::Version::None,
         "Platform::GlfwApplication::tryCreate(): window with OpenGL context already created", false);
 
-    /* Save DPI scaling values from configuration for future use, scale window
-       based on those */
+    /* Save DPI scaling values from configuration for future use in viewport
+       events, scale window based on those */
     _configurationDpiScalingPolicy = configuration.dpiScalingPolicy();
     _configurationDpiScaling = configuration.dpiScaling();
-    const Vector2i scaledWindowSize = configuration.size()*dpiScaling(configuration);
+    _dpiScaling = dpiScalingInternal(_configurationDpiScalingPolicy, _configurationDpiScaling);
+    const Vector2i scaledWindowSize = configuration.size()*_dpiScaling;
 
     /* Window flags */
     GLFWmonitor* monitor = nullptr; /* Needed for setting fullscreen */
@@ -693,10 +696,14 @@ void GlfwApplication::setupCallbacks() {
     #endif
     (_window, [](GLFWwindow* const window, const int w, const int h) {
         auto& app = *static_cast<GlfwApplication*>(glfwGetWindowUserPointer(window));
+        /* Refresh the DPI scaling value, as it might have changed as a side
+           effect of the window size change. Suppress the log output as any
+           warnings got likely already printed during startup. */
+        app._dpiScaling = app.dpiScalingInternal(app._configurationDpiScalingPolicy, app._configurationDpiScaling, /*silentLog*/ true);
         #ifdef MAGNUM_TARGET_GL
-        ViewportEvent e{app.windowSize(), {w, h}, app.dpiScaling()};
+        ViewportEvent e{app.windowSize(), {w, h}, app._dpiScaling};
         #else
-        ViewportEvent e{{w, h}, app.dpiScaling()};
+        ViewportEvent e{{w, h}, app._dpiScaling};
         #endif
         app.viewportEvent(e);
     });
@@ -810,14 +817,14 @@ Vector2i GlfwApplication::windowSize() const {
 void GlfwApplication::setWindowSize(const Vector2i& size) {
     CORRADE_ASSERT(_window, "Platform::GlfwApplication::setWindowSize(): no window opened", );
 
-    const Vector2i newSize = dpiScaling()*size;
+    const Vector2i newSize = _dpiScaling*size;
     glfwSetWindowSize(_window, newSize.x(), newSize.y());
 }
 
 void GlfwApplication::setMinWindowSize(const Vector2i& size) {
     CORRADE_ASSERT(_window, "Platform::GlfwApplication::setMinWindowSize(): no window opened", );
 
-    const Vector2i newSize = dpiScaling()*size;
+    const Vector2i newSize = _dpiScaling*size;
     glfwSetWindowSizeLimits(_window, newSize.x(), newSize.y(), _maxWindowSize.x(), _maxWindowSize.y());
     _minWindowSize = newSize;
 }
@@ -825,7 +832,7 @@ void GlfwApplication::setMinWindowSize(const Vector2i& size) {
 void GlfwApplication::setMaxWindowSize(const Vector2i& size) {
     CORRADE_ASSERT(_window, "Platform::GlfwApplication::setMaxWindowSize(): no window opened", );
 
-    const Vector2i newSize = dpiScaling()*size;
+    const Vector2i newSize = _dpiScaling*size;
     glfwSetWindowSizeLimits(_window, _minWindowSize.x(), _minWindowSize.y(), newSize.x(), newSize.y());
     _maxWindowSize = newSize;
 }
@@ -839,10 +846,6 @@ Vector2i GlfwApplication::framebufferSize() const {
     return size;
 }
 #endif
-
-Vector2 GlfwApplication::dpiScaling() const {
-    return dpiScalingInternal(_configurationDpiScalingPolicy, _configurationDpiScaling);
-}
 
 void GlfwApplication::setSwapInterval(const Int interval) {
     glfwSwapInterval(interval);

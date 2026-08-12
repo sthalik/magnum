@@ -937,13 +937,13 @@ class Sdl2Application {
          * @brief DPI scaling
          *
          * How the content should be scaled relative to system defaults for
-         * given @ref windowSize(). If a window is not created yet, returns
+         * given @ref windowSize(). If a window is not created yet, returns a
          * zero vector, use @ref dpiScaling(const Configuration&) for
          * calculating a value independently. See @ref Platform-Sdl2Application-dpi
          * for more information.
          * @see @ref framebufferSize()
          */
-        Vector2 dpiScaling() const;
+        Vector2 dpiScaling() const { return _dpiScaling; }
 
         /**
          * @brief DPI scaling for given configuration
@@ -1581,7 +1581,11 @@ class Sdl2Application {
         typedef Containers::EnumSet<Flag> Flags;
         CORRADE_ENUMSET_FRIEND_OPERATORS(Flags)
 
-        Vector2 dpiScalingInternal(Implementation::Sdl2DpiScalingPolicy configurationDpiScalingPolicy, const Vector2& configurationDpiScaling) const;
+        /* Called from dpiScaling(const Configuration&) and then from
+           tryCreate() (four separate locations!) and in response to window /
+           canvas size events (two separate locations, both with silent log),
+           with the return value cached to _dpiScaling below. */
+        Vector2 dpiScalingInternal(Implementation::Sdl2DpiScalingPolicy configurationDpiScalingPolicy, const Vector2& configurationDpiScaling, bool silentLog = false) const;
 
         #ifndef CORRADE_TARGET_EMSCRIPTEN
         SDL_Cursor* _cursors[12]{};
@@ -1590,10 +1594,16 @@ class Sdl2Application {
         #endif
 
         /* These are saved from command-line arguments, and from configuration
-           to be reused in dpiScaling() and viewportEvent() later */
+           to be reused in dpiScalingInternal() called in response to window
+           size events later */
         bool _verboseLog{};
         Implementation::Sdl2DpiScalingPolicy _commandLineDpiScalingPolicy{}, _configurationDpiScalingPolicy{};
         Vector2 _commandLineDpiScaling, _configurationDpiScaling;
+        /* Cached to not repeatedly do the heavy machinery of querying X11
+           symbols etc. along with fallback code paths every time DPI scaling
+           gets queried from user code or used in setWindowSize() and such. Is
+           updated in response to viewport events. */
+        Vector2 _dpiScaling;
 
         #ifndef CORRADE_TARGET_EMSCRIPTEN
         SDL_Window* _window{};

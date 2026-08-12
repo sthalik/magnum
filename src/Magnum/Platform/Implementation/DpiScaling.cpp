@@ -76,7 +76,7 @@ Utility::Arguments windowScalingArguments() {
 }
 
 #ifdef _MAGNUM_PLATFORM_USE_X11
-Float x11DpiScaling() {
+Float x11DpiScaling(std::ostream* output) {
     /* If the end app links to X11, these symbols will be available in a global
        scope and we can use that to query the DPI. If not, then those symbols
        won't be and that's okay -- it may be using Wayland or something else. */
@@ -107,7 +107,7 @@ Float x11DpiScaling() {
     #endif
     auto xrmDestroyDatabase = reinterpret_cast<void(*)(XrmDatabase)>(dlsym(xlib, "XrmDestroyDatabase"));
     if(!xOpenDisplay || !xCloseDisplay || !xResourceManagerString || !xrmGetStringDatabase || !xrmGetResource || !xrmDestroyDatabase) {
-        Warning{} << "Platform: can't load X11 symbols for getting virtual DPI scaling, falling back to physical DPI";
+        Warning{output} << "Platform: can't load X11 symbols for getting virtual DPI scaling, falling back to physical DPI";
         return {};
     }
 
@@ -143,7 +143,7 @@ Float x11DpiScaling() {
             return 1.0f;
     }
 
-    Warning{} << "Platform: can't get Xft.dpi property for virtual DPI scaling, falling back to physical DPI";
+    Warning{output} << "Platform: can't get Xft.dpi property for virtual DPI scaling, falling back to physical DPI";
     return {};
 }
 #endif

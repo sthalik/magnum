@@ -519,13 +519,13 @@ class GlfwApplication {
          * @brief DPI scaling
          *
          * How the content should be scaled relative to system defaults for
-         * given @ref windowSize(). If a window is not created yet, returns
+         * given @ref windowSize(). If a window is not created yet, returns a
          * zero vector, use @ref dpiScaling(const Configuration&) for
          * calculating a value independently. See @ref Platform-GlfwApplication-dpi
          * for more information.
          * @see @ref framebufferSize()
          */
-        Vector2 dpiScaling() const;
+        Vector2 dpiScaling() const { return _dpiScaling; }
 
         /**
          * @brief DPI scaling for given configuration
@@ -1029,7 +1029,11 @@ class GlfwApplication {
         typedef Containers::EnumSet<Flag> Flags;
         CORRADE_ENUMSET_FRIEND_OPERATORS(Flags)
 
-        Vector2 dpiScalingInternal(Implementation::GlfwDpiScalingPolicy configurationDpiScalingPolicy, const Vector2& configurationDpiScaling) const;
+        /* Called from dpiScaling(const Configuration&) and then from
+           tryCreate() (two separate locations!) and in response to window size
+           events (there with silent log), with the return value cached to
+           _dpiScaling below. */
+        Vector2 dpiScalingInternal(Implementation::GlfwDpiScalingPolicy configurationDpiScalingPolicy, const Vector2& configurationDpiScaling, bool silentLog = false) const;
 
         void setupCallbacks();
 
@@ -1045,10 +1049,16 @@ class GlfwApplication {
         Cursor _cursor = Cursor::Arrow;
 
         /* These are saved from command-line arguments, and from configuration
-           to be reused in dpiScaling() and viewportEvent() later */
+           to be reused in dpiScalingInternal() called in response to window
+           size events later */
         bool _verboseLog{};
         Implementation::GlfwDpiScalingPolicy _commandLineDpiScalingPolicy{}, _configurationDpiScalingPolicy{};
         Vector2 _commandLineDpiScaling, _configurationDpiScaling;
+        /* Cached to not repeatedly do the heavy machinery of querying X11
+           symbols etc. along with fallback code paths every time DPI scaling
+           gets queried from user code or used in setWindowSize() and such. Is
+           updated in response to window size events. */
+        Vector2 _dpiScaling;
 
         GLFWwindow* _window{nullptr};
         /* Not using Nanoseconds as that would require including Time.h */
