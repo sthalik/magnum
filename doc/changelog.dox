@@ -936,6 +936,10 @@ See also:
     queries
 -   Updated @ref Platform::AndroidApplication to not use a deprecated API that
     was removed in NDK 27 ([mosra/magnum#659](https://github.com/mosra/magnum/pull/659))
+-   Removed old workarounds from @ref Platform::GlfwApplication that were fixed
+    in GLFW 3.3.1, 3.3.3 and 3.3.7, respectively. See [mosra/magnum#388](https://github.com/mosra/magnum/pull/388)
+    and [mosra/magnum#392](https://github.com/mosra/magnum/pull/392) for more
+    information.
 
 @subsubsection changelog-latest-changes-scenegraph SceneGraph library
 
