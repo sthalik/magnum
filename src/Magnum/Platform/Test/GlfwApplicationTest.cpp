@@ -476,8 +476,13 @@ GlfwApplicationTest::GlfwApplicationTest(const Arguments& arguments): Platform::
         importer->openData(rs.getRaw("icon-64.tga")) && (image64 = importer->image2D(0))) setWindowIcon({*image16, *image32, *image64});
     else Warning{} << "Can't load the plugin / images, not setting window icon";
 
-    /* This shouldn't blow up */
-    CORRADE_INTERNAL_ASSERT(!isKeyPressed(Key::Unknown) && !isKeyPressed(Key(0x7fffffff)));
+    /* This shouldn't blow up. The second prints an error about invalid key
+       from GLFW however, suppress that. */
+    CORRADE_INTERNAL_ASSERT(!isKeyPressed(Key::Unknown));
+    {
+        Error silenceError{nullptr};
+        CORRADE_INTERNAL_ASSERT(!isKeyPressed(Key(0x7fffffff)));
+    }
 }
 
 }}}}
