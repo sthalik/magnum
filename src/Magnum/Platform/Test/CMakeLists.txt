@@ -66,6 +66,16 @@ if(MAGNUM_WITH_EMSCRIPTENAPPLICATION)
     else()
         target_link_options(PlatformEmscriptenApplicationTest PRIVATE "SHELL:-s ASSERTIONS=1")
     endif()
+    # Emscriten 6.0.2 no longer includes keyboardListeningElement that is used
+    # in MultipleEmscriptenApplicationTest.html, have to add it explicitly:
+    #   https://github.com/emscripten-core/emscripten/pull/27197
+    # Setting this will also erase the existing defaults (!!) so then I have to
+    # explicitly list everything I use in EmscriptenApplication.js. Wonderful.
+    # TODO go back once the following is merged (... and a decade passes):
+    #   https://github.com/emscripten-core/emscripten/pull/19938
+    if(NOT EMSCRIPTEN_VERSION VERSION_LESS 6.0.2)
+        target_link_options(PlatformEmscriptenApplicationTest PRIVATE "SHELL:-s INCOMING_MODULE_JS_API=arguments,canvas,keyboardListeningElement,monitorRunDependencies,onAbort,preRun,postRun,print,printErr,setStatus,setStatusDescription")
+    endif()
     add_custom_command(TARGET PlatformEmscriptenApplicationTest POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${CMAKE_CURRENT_SOURCE_DIR}/../WebApplication.css"
@@ -90,6 +100,11 @@ if(MAGNUM_WITH_EMSCRIPTENAPPLICATION)
         target_link_options(PlatformMultipleEmscriptenApplicationTest PRIVATE "SHELL:-s ASSERTIONS=2")
     else()
         target_link_options(PlatformMultipleEmscriptenApplicationTest PRIVATE "SHELL:-s ASSERTIONS=1")
+    endif()
+    # Emscriten 6.0.2 no longer includes keyboardListeningElement that is used
+    # in MultipleEmscriptenApplicationTest.html; same TODO as above
+    if(NOT EMSCRIPTEN_VERSION VERSION_LESS 6.0.2)
+        target_link_options(PlatformMultipleEmscriptenApplicationTest PRIVATE "SHELL:-s INCOMING_MODULE_JS_API=arguments,canvas,keyboardListeningElement,monitorRunDependencies,onAbort,preRun,postRun,print,printErr,setStatus,setStatusDescription")
     endif()
     target_compile_definitions(PlatformMultipleEmscriptenApplicationTest PRIVATE CUSTOM_CLEAR_COLOR=0x3bd267_rgbf)
     add_custom_command(TARGET PlatformMultipleEmscriptenApplicationTest POST_BUILD
