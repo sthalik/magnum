@@ -299,7 +299,9 @@ struct GlfwApplicationTest: Platform::Application {
 
     void drawEvent() override {
         Debug{} << "draw";
-        swapBuffers();
+
+        if(!_contextless)
+            swapBuffers();
 
         /* Invalid keys are tested in the constructor */
         if(isKeyPressed(Key::M))
@@ -411,6 +413,7 @@ struct GlfwApplicationTest: Platform::Application {
     #endif
 
     private:
+        bool _contextless = true;
         bool _redraw = false;
         bool _vsync = false;
 };
@@ -425,6 +428,7 @@ GlfwApplicationTest::GlfwApplicationTest(const Arguments& arguments): Platform::
         #ifdef MAGNUM_TARGET_GL
         .addBooleanOption("quiet").setHelp("quiet", "like --magnum-log quiet, but specified via a Context::Configuration instead")
         .addBooleanOption("gpu-validation").setHelp("gpu-validation", "like --magnum-gpu-validation, but specified via a Context::Configuration instead")
+        .addBooleanOption("contextless").setHelp("contextless", "initialize without an OpenGL context")
         #endif
         .parse(arguments.argc, arguments.argv);
 
@@ -443,20 +447,30 @@ GlfwApplicationTest::GlfwApplicationTest(const Arguments& arguments): Platform::
     if(args.isSet("always-on-top"))
         conf.addWindowFlags(Configuration::WindowFlag::AlwaysOnTop);
     #ifdef MAGNUM_TARGET_GL
-    GLConfiguration glConf;
-    if(args.isSet("quiet"))
-        glConf.addFlags(GLConfiguration::Flag::QuietLog);
-    /* No GL-specific verbose log in GlfwApplication that we'd need to handle
-       explicitly */
-    if(args.isSet("gpu-validation"))
-        glConf.addFlags(GLConfiguration::Flag::GpuValidation);
-    create(conf, glConf);
-    #else
-    create(conf);
+    if((_contextless = args.isSet("contextless")))
+    #endif
+    {
+        #ifdef MAGNUM_TARGET_GL
+        conf.addWindowFlags(Configuration::WindowFlag::Contextless);
+        #endif
+        create(conf);
+    }
+    #ifdef MAGNUM_TARGET_GL
+    else {
+        GLConfiguration glConf;
+        if(args.isSet("quiet"))
+            glConf.addFlags(GLConfiguration::Flag::QuietLog);
+        /* No GL-specific verbose log in GlfwApplication that we'd need to
+           handle explicitly */
+        if(args.isSet("gpu-validation"))
+            glConf.addFlags(GLConfiguration::Flag::GpuValidation);
+        create(conf, glConf);
+    }
     #endif
 
     #ifdef MAGNUM_TARGET_GL
-    Debug{} << "GL context flags:" << GL::Context::current().flags();
+    if(!_contextless)
+        Debug{} << "GL context flags:" << GL::Context::current().flags();
     #endif
 
     /* For testing resize events */
