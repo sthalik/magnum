@@ -280,12 +280,14 @@ Vector2 GlfwApplication::dpiScalingInternal(const Implementation::GlfwDpiScaling
     #if defined(CORRADE_TARGET_UNIX) || (defined(CORRADE_TARGET_WINDOWS) && !defined(CORRADE_TARGET_WINDOWS_RT))
     GLFWmonitor* const monitor = glfwGetPrimaryMonitor();
     const GLFWvidmode* const mode = glfwGetVideoMode(monitor);
+    /* On X11, XRandR might return zero values, which would then cause a
+       division by zero here. GLFW 3.3.1+ works around that by assuming 96 DPI:
+        https://github.com/glfw/glfw/commit/7c33fb22fdd55af5417a48c8594fc495fb1f81a2
+       Subsequently, the same issue was fixed for Wayland in 3.3.3:
+        https://github.com/glfw/glfw/pull/1784 */
     Vector2i monitorSize;
     glfwGetMonitorPhysicalSize(monitor, &monitorSize.x(), &monitorSize.y());
-    if(monitorSize.isZero()) {
-        Warning{verbose} << "Platform::GlfwApplication: the physical monitor size is zero? DPI scaling won't be used";
-        return Vector2{1.0f};
-    }
+    CORRADE_INTERNAL_ASSERT(!monitorSize.isZero());
     auto dpi = Vector2{Vector2i{mode->width, mode->height}*25.4f/Vector2{monitorSize}};
     const Vector2 dpiScaling{dpi/96.0f};
     Debug{verbose} << "Platform::GlfwApplication: physical DPI scaling" << dpiScaling;
