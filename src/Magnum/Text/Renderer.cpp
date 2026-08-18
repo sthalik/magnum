@@ -1550,7 +1550,8 @@ Range2D alignRenderedLine(const Range2D& lineRectangle, const LayoutDirection di
 
     Float alignmentOffsetX;
     if((UnsignedByte(alignment) & Implementation::AlignmentHorizontal) == Implementation::AlignmentLeft)
-        alignmentOffsetX = -lineRectangle.left();
+        alignmentOffsetX = UnsignedByte(alignment) & Implementation::AlignmentGlyphBounds ?
+            -lineRectangle.left() : 0.0f;
     else if((UnsignedByte(alignment) & Implementation::AlignmentHorizontal) == Implementation::AlignmentCenter) {
         alignmentOffsetX = -lineRectangle.centerX();
         /* Integer alignment */

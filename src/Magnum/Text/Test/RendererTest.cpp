@@ -172,13 +172,19 @@ const struct {
     Alignment alignment;
     Float offset;
 } AlignLineData[]{
-    /* The vertical alignment and GlyphBounds has no effect here */
-    /* Left is the default (0) value, thus should result in no shift */
-    {"left", Alignment::BottomLeft, -10.0f},
-    {"right", Alignment::LineRightGlyphBounds, -13.5f},
+    /* The vertical alignment has no effect here, GlyphBounds only has an
+       effect on left alignment */
+    /* Left is the default (0) value, thus should result in no shift unless
+       glyph bounds alignment is explicitly requested, in which case the glyph
+       offset is subtracted */
+    {"left", Alignment::BottomLeft, 0.0f},
+    {"left, glyph bounds", Alignment::BottomLeftGlyphBounds, -10.0f},
+    {"right", Alignment::LineRight, -13.5f},
+    {"right, glyph bounds", Alignment::LineRightGlyphBounds, -13.5f},
     /* Integral should be handled only for Center */
-    {"right, integral", Alignment::MiddleRightGlyphBoundsIntegral, -13.5f},
+    {"right, integral", Alignment::MiddleRightIntegral, -13.5f},
     {"center", Alignment::TopCenter, -11.75f},
+    {"center, glyph bounds", Alignment::TopCenterGlyphBounds, -11.75f},
     {"center, integral", Alignment::TopCenterIntegral, -12.0f},
 };
 
