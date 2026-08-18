@@ -325,7 +325,15 @@ void ImageTest::createInfoConstructNoInit() {
     ImageCreateInfo info{NoInit};
     info->sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2;
     new(&info) ImageCreateInfo{NoInit};
-    CORRADE_COMPARE(info->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    {
+        /* Explicitly check we're not on Clang because certain Clang-based IDEs
+           inherit __GNUC__ if GCC is used instead of leaving it at 4 like
+           Clang itself does */
+        #if defined(CORRADE_TARGET_GCC) && !defined(CORRADE_TARGET_CLANG) && __GNUC__ >= 16 && __OPTIMIZE__
+        CORRADE_EXPECT_FAIL("GCC 16+ misoptimizes and overwrites the value.");
+        #endif
+        CORRADE_COMPARE(info->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    }
 
     CORRADE_VERIFY(std::is_nothrow_constructible<ImageCreateInfo, NoInitT>::value);
 
@@ -408,7 +416,15 @@ void ImageTest::imageCopyConstructNoInit() {
     ImageCopy copy{NoInit};
     copy->sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2;
     new(&copy) ImageCopy{NoInit};
-    CORRADE_COMPARE(copy->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    {
+        /* Explicitly check we're not on Clang because certain Clang-based IDEs
+           inherit __GNUC__ if GCC is used instead of leaving it at 4 like
+           Clang itself does */
+        #if defined(CORRADE_TARGET_GCC) && !defined(CORRADE_TARGET_CLANG) && __GNUC__ >= 16 && __OPTIMIZE__
+        CORRADE_EXPECT_FAIL("GCC 16+ misoptimizes and overwrites the value.");
+        #endif
+        CORRADE_COMPARE(copy->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    }
 
     CORRADE_VERIFY(std::is_nothrow_constructible<ImageCopy, NoInitT>::value);
 
@@ -504,7 +520,15 @@ void ImageTest::copyImageInfoConstructNoInit() {
     CopyImageInfo info{NoInit};
     info->sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2;
     new(&info) CopyImageInfo{NoInit};
-    CORRADE_COMPARE(info->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    {
+        /* Explicitly check we're not on Clang because certain Clang-based IDEs
+           inherit __GNUC__ if GCC is used instead of leaving it at 4 like
+           Clang itself does */
+        #if defined(CORRADE_TARGET_GCC) && !defined(CORRADE_TARGET_CLANG) && __GNUC__ >= 16 && __OPTIMIZE__
+        CORRADE_EXPECT_FAIL("GCC 16+ misoptimizes and overwrites the value.");
+        #endif
+        CORRADE_COMPARE(info->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    }
 
     CORRADE_VERIFY(std::is_nothrow_constructible<CopyImageInfo, NoInitT>::value);
 
@@ -650,7 +674,15 @@ void ImageTest::bufferImageCopyConstructNoInit() {
     BufferImageCopy copy{NoInit};
     copy->sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2;
     new(&copy) BufferImageCopy{NoInit};
-    CORRADE_COMPARE(copy->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    {
+        /* Explicitly check we're not on Clang because certain Clang-based IDEs
+           inherit __GNUC__ if GCC is used instead of leaving it at 4 like
+           Clang itself does */
+        #if defined(CORRADE_TARGET_GCC) && !defined(CORRADE_TARGET_CLANG) && __GNUC__ >= 16 && __OPTIMIZE__
+        CORRADE_EXPECT_FAIL("GCC 16+ misoptimizes and overwrites the value.");
+        #endif
+        CORRADE_COMPARE(copy->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    }
 
     CORRADE_VERIFY(std::is_nothrow_constructible<BufferImageCopy, NoInitT>::value);
 
@@ -738,7 +770,15 @@ void ImageTest::copyBufferToImageInfoConstructNoInit() {
     CopyBufferToImageInfo info{NoInit};
     info->sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2;
     new(&info) CopyBufferToImageInfo{NoInit};
-    CORRADE_COMPARE(info->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    {
+        /* Explicitly check we're not on Clang because certain Clang-based IDEs
+           inherit __GNUC__ if GCC is used instead of leaving it at 4 like
+           Clang itself does */
+        #if defined(CORRADE_TARGET_GCC) && !defined(CORRADE_TARGET_CLANG) && __GNUC__ >= 16 && __OPTIMIZE__
+        CORRADE_EXPECT_FAIL("GCC 16+ misoptimizes and overwrites the value.");
+        #endif
+        CORRADE_COMPARE(info->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    }
 
     CORRADE_VERIFY(std::is_nothrow_constructible<CopyBufferToImageInfo, NoInitT>::value);
 
@@ -793,7 +833,15 @@ void ImageTest::copyImageToBufferInfoConstructNoInit() {
     CopyImageToBufferInfo info{NoInit};
     info->sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2;
     new(&info) CopyImageToBufferInfo{NoInit};
-    CORRADE_COMPARE(info->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    {
+        /* Explicitly check we're not on Clang because certain Clang-based IDEs
+           inherit __GNUC__ if GCC is used instead of leaving it at 4 like
+           Clang itself does */
+        #if defined(CORRADE_TARGET_GCC) && !defined(CORRADE_TARGET_CLANG) && __GNUC__ >= 16 && __OPTIMIZE__
+        CORRADE_EXPECT_FAIL("GCC 16+ misoptimizes and overwrites the value.");
+        #endif
+        CORRADE_COMPARE(info->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    }
 
     CORRADE_VERIFY(std::is_nothrow_constructible<CopyImageToBufferInfo, NoInitT>::value);
 

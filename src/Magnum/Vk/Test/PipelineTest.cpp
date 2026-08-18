@@ -223,7 +223,15 @@ void PipelineTest::rasterizationCreateInfoConstructNoInit() {
     RasterizationPipelineCreateInfo info{NoInit};
     info->sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2;
     new(&info) RasterizationPipelineCreateInfo{NoInit};
-    CORRADE_COMPARE(info->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    {
+        /* Explicitly check we're not on Clang because certain Clang-based IDEs
+           inherit __GNUC__ if GCC is used instead of leaving it at 4 like
+           Clang itself does */
+        #if defined(CORRADE_TARGET_GCC) && !defined(CORRADE_TARGET_CLANG) && __GNUC__ >= 16 && __OPTIMIZE__
+        CORRADE_EXPECT_FAIL("GCC 16+ misoptimizes and overwrites the value.");
+        #endif
+        CORRADE_COMPARE(info->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    }
 
     CORRADE_VERIFY(std::is_nothrow_constructible<RasterizationPipelineCreateInfo, NoInitT>::value);
 
@@ -580,7 +588,15 @@ void PipelineTest::computeCreateInfoConstructNoInit() {
     ComputePipelineCreateInfo info{NoInit};
     info->sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2;
     new(&info) ComputePipelineCreateInfo{NoInit};
-    CORRADE_COMPARE(info->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    {
+        /* Explicitly check we're not on Clang because certain Clang-based IDEs
+           inherit __GNUC__ if GCC is used instead of leaving it at 4 like
+           Clang itself does */
+        #if defined(CORRADE_TARGET_GCC) && !defined(CORRADE_TARGET_CLANG) && __GNUC__ >= 16 && __OPTIMIZE__
+        CORRADE_EXPECT_FAIL("GCC 16+ misoptimizes and overwrites the value.");
+        #endif
+        CORRADE_COMPARE(info->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    }
 
     CORRADE_VERIFY(std::is_nothrow_constructible<ComputePipelineCreateInfo, NoInitT>::value);
 
@@ -621,7 +637,15 @@ void PipelineTest::memoryBarrierConstructNoInit() {
     MemoryBarrier barrier{NoInit};
     barrier->sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2;
     new(&barrier) MemoryBarrier{NoInit};
-    CORRADE_COMPARE(barrier->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    {
+        /* Explicitly check we're not on Clang because certain Clang-based IDEs
+           inherit __GNUC__ if GCC is used instead of leaving it at 4 like
+           Clang itself does */
+        #if defined(CORRADE_TARGET_GCC) && !defined(CORRADE_TARGET_CLANG) && __GNUC__ >= 16 && __OPTIMIZE__
+        CORRADE_EXPECT_FAIL("GCC 16+ misoptimizes and overwrites the value.");
+        #endif
+        CORRADE_COMPARE(barrier->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    }
 
     CORRADE_VERIFY(std::is_nothrow_constructible<MemoryBarrier, NoInitT>::value);
 
@@ -652,7 +676,15 @@ void PipelineTest::bufferMemoryBarrierConstructNoInit() {
     BufferMemoryBarrier barrier{NoInit};
     barrier->sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2;
     new(&barrier) BufferMemoryBarrier{NoInit};
-    CORRADE_COMPARE(barrier->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    {
+        /* Explicitly check we're not on Clang because certain Clang-based IDEs
+           inherit __GNUC__ if GCC is used instead of leaving it at 4 like
+           Clang itself does */
+        #if defined(CORRADE_TARGET_GCC) && !defined(CORRADE_TARGET_CLANG) && __GNUC__ >= 16 && __OPTIMIZE__
+        CORRADE_EXPECT_FAIL("GCC 16+ misoptimizes and overwrites the value.");
+        #endif
+        CORRADE_COMPARE(barrier->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    }
 
     CORRADE_VERIFY(std::is_nothrow_constructible<BufferMemoryBarrier, NoInitT>::value);
 
@@ -710,7 +742,15 @@ void PipelineTest::imageMemoryBarrierConstructNoInit() {
     ImageMemoryBarrier barrier{NoInit};
     barrier->sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2;
     new(&barrier) ImageMemoryBarrier{NoInit};
-    CORRADE_COMPARE(barrier->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    {
+        /* Explicitly check we're not on Clang because certain Clang-based IDEs
+           inherit __GNUC__ if GCC is used instead of leaving it at 4 like
+           Clang itself does */
+        #if defined(CORRADE_TARGET_GCC) && !defined(CORRADE_TARGET_CLANG) && __GNUC__ >= 16 && __OPTIMIZE__
+        CORRADE_EXPECT_FAIL("GCC 16+ misoptimizes and overwrites the value.");
+        #endif
+        CORRADE_COMPARE(barrier->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    }
 
     CORRADE_VERIFY(std::is_nothrow_constructible<ImageMemoryBarrier, NoInitT>::value);
 

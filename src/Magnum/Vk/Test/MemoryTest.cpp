@@ -79,7 +79,15 @@ void MemoryTest::requirementsConstructNoInit() {
     MemoryRequirements requirements{NoInit};
     requirements->sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2;
     new(&requirements) MemoryRequirements{NoInit};
-    CORRADE_COMPARE(requirements->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    {
+        /* Explicitly check we're not on Clang because certain Clang-based IDEs
+           inherit __GNUC__ if GCC is used instead of leaving it at 4 like
+           Clang itself does */
+        #if defined(CORRADE_TARGET_GCC) && !defined(CORRADE_TARGET_CLANG) && __GNUC__ >= 16 && __OPTIMIZE__
+        CORRADE_EXPECT_FAIL("GCC 16+ misoptimizes and overwrites the value.");
+        #endif
+        CORRADE_COMPARE(requirements->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    }
 
     CORRADE_VERIFY(std::is_nothrow_constructible<MemoryRequirements, NoInitT>::value);
 
@@ -133,7 +141,15 @@ void MemoryTest::allocateInfoConstructNoInit() {
     MemoryAllocateInfo info{NoInit};
     info->sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2;
     new(&info) MemoryAllocateInfo{NoInit};
-    CORRADE_COMPARE(info->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    {
+        /* Explicitly check we're not on Clang because certain Clang-based IDEs
+           inherit __GNUC__ if GCC is used instead of leaving it at 4 like
+           Clang itself does */
+        #if defined(CORRADE_TARGET_GCC) && !defined(CORRADE_TARGET_CLANG) && __GNUC__ >= 16 && __OPTIMIZE__
+        CORRADE_EXPECT_FAIL("GCC 16+ misoptimizes and overwrites the value.");
+        #endif
+        CORRADE_COMPARE(info->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    }
 
     CORRADE_VERIFY(std::is_nothrow_constructible<MemoryAllocateInfo, NoInitT>::value);
 

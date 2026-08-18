@@ -293,7 +293,15 @@ void RenderPassTest::attachmentDescriptionConstructNoInit() {
     AttachmentDescription description{NoInit};
     description->sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2;
     new(&description) AttachmentDescription{NoInit};
-    CORRADE_COMPARE(description->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    {
+        /* Explicitly check we're not on Clang because certain Clang-based IDEs
+           inherit __GNUC__ if GCC is used instead of leaving it at 4 like
+           Clang itself does */
+        #if defined(CORRADE_TARGET_GCC) && !defined(CORRADE_TARGET_CLANG) && __GNUC__ >= 16 && __OPTIMIZE__
+        CORRADE_EXPECT_FAIL("GCC 16+ misoptimizes and overwrites the value.");
+        #endif
+        CORRADE_COMPARE(description->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    }
 
     CORRADE_VERIFY(std::is_nothrow_constructible<AttachmentDescription, NoInitT>::value);
 
@@ -376,7 +384,15 @@ void RenderPassTest::attachmentReferenceConstructNoInit() {
     AttachmentReference reference{NoInit};
     reference->sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2;
     new(&reference) AttachmentReference{NoInit};
-    CORRADE_COMPARE(reference->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    {
+        /* Explicitly check we're not on Clang because certain Clang-based IDEs
+           inherit __GNUC__ if GCC is used instead of leaving it at 4 like
+           Clang itself does */
+        #if defined(CORRADE_TARGET_GCC) && !defined(CORRADE_TARGET_CLANG) && __GNUC__ >= 16 && __OPTIMIZE__
+        CORRADE_EXPECT_FAIL("GCC 16+ misoptimizes and overwrites the value.");
+        #endif
+        CORRADE_COMPARE(reference->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    }
 
     CORRADE_VERIFY(std::is_nothrow_constructible<AttachmentReference, NoInitT>::value);
 
@@ -436,7 +452,15 @@ void RenderPassTest::subpassDescriptionConstructNoInit() {
     SubpassDescription description{NoInit};
     description->sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2;
     new(&description) SubpassDescription{NoInit};
-    CORRADE_COMPARE(description->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    {
+        /* Explicitly check we're not on Clang because certain Clang-based IDEs
+           inherit __GNUC__ if GCC is used instead of leaving it at 4 like
+           Clang itself does */
+        #if defined(CORRADE_TARGET_GCC) && !defined(CORRADE_TARGET_CLANG) && __GNUC__ >= 16 && __OPTIMIZE__
+        CORRADE_EXPECT_FAIL("GCC 16+ misoptimizes and overwrites the value.");
+        #endif
+        CORRADE_COMPARE(description->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    }
 
     CORRADE_VERIFY(std::is_nothrow_constructible<SubpassDescription, NoInitT>::value);
 
@@ -784,7 +808,15 @@ void RenderPassTest::subpassDependencyConstructNoInit() {
     SubpassDependency dependency{NoInit};
     dependency->sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2;
     new(&dependency) SubpassDependency{NoInit};
-    CORRADE_COMPARE(dependency->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    {
+        /* Explicitly check we're not on Clang because certain Clang-based IDEs
+           inherit __GNUC__ if GCC is used instead of leaving it at 4 like
+           Clang itself does */
+        #if defined(CORRADE_TARGET_GCC) && !defined(CORRADE_TARGET_CLANG) && __GNUC__ >= 16 && __OPTIMIZE__
+        CORRADE_EXPECT_FAIL("GCC 16+ misoptimizes and overwrites the value.");
+        #endif
+        CORRADE_COMPARE(dependency->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    }
 
     CORRADE_VERIFY(std::is_nothrow_constructible<SubpassDependency, NoInitT>::value);
 
@@ -863,7 +895,15 @@ void RenderPassTest::createInfoConstructNoInit() {
     RenderPassCreateInfo info{NoInit};
     info->sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2;
     new(&info) RenderPassCreateInfo{NoInit};
-    CORRADE_COMPARE(info->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    {
+        /* Explicitly check we're not on Clang because certain Clang-based IDEs
+           inherit __GNUC__ if GCC is used instead of leaving it at 4 like
+           Clang itself does */
+        #if defined(CORRADE_TARGET_GCC) && !defined(CORRADE_TARGET_CLANG) && __GNUC__ >= 16 && __OPTIMIZE__
+        CORRADE_EXPECT_FAIL("GCC 16+ misoptimizes and overwrites the value.");
+        #endif
+        CORRADE_COMPARE(info->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    }
 
     CORRADE_VERIFY(std::is_nothrow_constructible<RenderPassCreateInfo, NoInitT>::value);
 
@@ -1163,7 +1203,15 @@ void RenderPassTest::beginInfoConstructNoInit() {
     RenderPassBeginInfo info{NoInit};
     info->sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2;
     new(&info) RenderPassBeginInfo{NoInit};
-    CORRADE_COMPARE(info->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    {
+        /* Explicitly check we're not on Clang because certain Clang-based IDEs
+           inherit __GNUC__ if GCC is used instead of leaving it at 4 like
+           Clang itself does */
+        #if defined(CORRADE_TARGET_GCC) && !defined(CORRADE_TARGET_CLANG) && __GNUC__ >= 16 && __OPTIMIZE__
+        CORRADE_EXPECT_FAIL("GCC 16+ misoptimizes and overwrites the value.");
+        #endif
+        CORRADE_COMPARE(info->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    }
 
     CORRADE_VERIFY(std::is_nothrow_constructible<RenderPassBeginInfo, NoInitT>::value);
 
@@ -1233,7 +1281,15 @@ void RenderPassTest::subpassBeginInfoConstructNoInit() {
     SubpassBeginInfo info{NoInit};
     info->sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2;
     new(&info) SubpassBeginInfo{NoInit};
-    CORRADE_COMPARE(info->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    {
+        /* Explicitly check we're not on Clang because certain Clang-based IDEs
+           inherit __GNUC__ if GCC is used instead of leaving it at 4 like
+           Clang itself does */
+        #if defined(CORRADE_TARGET_GCC) && !defined(CORRADE_TARGET_CLANG) && __GNUC__ >= 16 && __OPTIMIZE__
+        CORRADE_EXPECT_FAIL("GCC 16+ misoptimizes and overwrites the value.");
+        #endif
+        CORRADE_COMPARE(info->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    }
 
     CORRADE_VERIFY(std::is_nothrow_constructible<SubpassBeginInfo, NoInitT>::value);
 
@@ -1258,7 +1314,15 @@ void RenderPassTest::subpassEndInfoConstructNoInit() {
     SubpassEndInfo info{NoInit};
     info->sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2;
     new(&info) SubpassEndInfo{NoInit};
-    CORRADE_COMPARE(info->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    {
+        /* Explicitly check we're not on Clang because certain Clang-based IDEs
+           inherit __GNUC__ if GCC is used instead of leaving it at 4 like
+           Clang itself does */
+        #if defined(CORRADE_TARGET_GCC) && !defined(CORRADE_TARGET_CLANG) && __GNUC__ >= 16 && __OPTIMIZE__
+        CORRADE_EXPECT_FAIL("GCC 16+ misoptimizes and overwrites the value.");
+        #endif
+        CORRADE_COMPARE(info->sType, VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2);
+    }
 
     CORRADE_VERIFY(std::is_nothrow_constructible<SubpassEndInfo, NoInitT>::value);
 
