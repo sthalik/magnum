@@ -24,7 +24,8 @@
     DEALINGS IN THE SOFTWARE.
 */
 
-/* Colors kept in sync with m.css dark theme, https://mcss.mosra.cz */
+/* Colors kept in sync with m.css dark theme, https://mcss.mosra.cz. The same
+   stylesheet is in Corrade's TestSuite/EmscriptenRunner.html.in. */
 
 *, ::before, ::after { box-sizing: border-box; }
 
