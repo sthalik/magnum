@@ -61,6 +61,16 @@ function createMagnumModule(init) {
         log: document.getElementById('log'),
 
         setStatus: function(message) {
+            /* As of Emscripten 6.0.1 and https://github.com/emscripten-core/emscripten/pull/27121
+               monitorRunDependencies() isn't called anymore for some reason
+               (and thus the total dependency count stays zero), and the only
+               way to know loading finished in order to unhide the log <pre> is
+               when setStatus() is called with an empty message. No note about
+               any of this in the changelog so I suppose it's a regression, but
+               nobody cares, and I'm tired so I won't care either. */
+            if(!module.totalDependencies && !message && module.log)
+                module.log.style.display = 'block';
+
             if(module.status)
                 module.status.innerHTML = message;
         },
