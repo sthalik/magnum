@@ -73,11 +73,11 @@ function createMagnumModule(init) {
         totalDependencies: 0,
 
         monitorRunDependencies: function(left) {
-            this.totalDependencies = Math.max(this.totalDependencies, left);
+            module.totalDependencies = Math.max(module.totalDependencies, left);
 
             if(left) {
                 module.setStatus('Downloading...');
-                module.setStatusDescription((this.totalDependencies - left) + ' / ' + this.totalDependencies);
+                module.setStatusDescription((module.totalDependencies - left) + ' / ' + module.totalDependencies);
             } else {
                 module.setStatus('Download complete');
                 module.setStatusDescription('');
