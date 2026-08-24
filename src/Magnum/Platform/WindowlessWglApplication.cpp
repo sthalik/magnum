@@ -297,6 +297,10 @@ WindowlessWglContext::WindowlessWglContext(WindowlessWglContext&& other) noexcep
 WindowlessWglContext::~WindowlessWglContext() {
     if(_context)
         wglDeleteContext(_context);
+    /* The window class has no CS_OWNDC, so this is a common DC that has to be
+       given back */
+    if(_deviceContext)
+        ReleaseDC(_window, _deviceContext);
     if(_window)
         DestroyWindow(_window);
 }
