@@ -540,6 +540,9 @@ Vector2 Sdl2Application::dpiScalingInternal(const Implementation::Sdl2DpiScaling
     /* The handle is apparently allocated anew each time, so we have to release
        it back: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowdc#remarks */
     ReleaseDC(nullptr, hDC);
+    /* Zero e.g. on remote desktop and virtual displays, same assert as in
+       GlfwApplication */
+    CORRADE_INTERNAL_ASSERT(!monitorSize.isZero());
     SDL_DisplayMode mode;
     CORRADE_INTERNAL_ASSERT(SDL_GetDesktopDisplayMode(0, &mode) == 0);
     auto dpi = Vector2{Vector2i{mode.w, mode.h}*25.4f/Vector2{monitorSize}};
