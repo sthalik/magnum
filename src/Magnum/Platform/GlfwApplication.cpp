@@ -616,6 +616,7 @@ bool GlfwApplication::tryCreate(const Configuration& configuration, const GLConf
     if(!_context->tryCreate(glConfiguration)) {
         glfwDestroyWindow(_window);
         _window = nullptr;
+        return false;
     }
 
     /* Show the window once we are sure that everything is okay */
