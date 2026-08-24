@@ -280,7 +280,7 @@ WindowlessEglContext::WindowlessEglContext(const Configuration& configuration, G
                 };
 
                 if(!RegisterClassW(&wc)) {
-                    Error() << "Platform::WindowlessWglContext: cannot create window class:" << GetLastError();
+                    Error() << "Platform::WindowlessEglContext: cannot create window class:" << GetLastError();
                     return;
                 }
             }
@@ -288,9 +288,14 @@ WindowlessEglContext::WindowlessEglContext(const Configuration& configuration, G
             /* Create the window */
             _window = CreateWindowW(wc.lpszClassName, L"Magnum Windowless Application",
                 WS_OVERLAPPEDWINDOW, 0, 0, 32, 32, 0, 0, wc.hInstance, 0);
+            if(!_window) {
+                Error() << "Platform::WindowlessEglContext: cannot create window:" << GetLastError();
+                return;
+            }
 
             /* Initialize */
-            _display = eglGetDisplay(GetDC(_window));
+            _deviceContext = GetDC(_window);
+            _display = eglGetDisplay(_deviceContext);
             #else
             if(!(_display = eglGetDisplay(EGL_DEFAULT_DISPLAY))) {
                 Error{} << "Platform::WindowlessEglApplication::tryCreateContext(): cannot get default EGL display:" << Implementation::eglErrorString(eglGetError());
@@ -571,6 +576,7 @@ WindowlessEglContext::WindowlessEglContext(WindowlessEglContext&& other) noexcep
     #endif
     #ifdef CORRADE_TARGET_WINDOWS
     _window{other._window},
+    _deviceContext{other._deviceContext},
     #endif
     _display{other._display}, _context{other._context}
     #if defined(CORRADE_TARGET_WINDOWS) || (defined(MAGNUM_TARGET_GLES) && !defined(MAGNUM_TARGET_WEBGL))
@@ -582,6 +588,7 @@ WindowlessEglContext::WindowlessEglContext(WindowlessEglContext&& other) noexcep
     #endif
     #ifdef CORRADE_TARGET_WINDOWS
     other._window = {};
+    other._deviceContext = {};
     #endif
     other._display = {};
     other._context = {};
@@ -620,6 +627,10 @@ WindowlessEglContext::~WindowlessEglContext() {
         _display) eglTerminate(_display);
 
     #ifdef CORRADE_TARGET_WINDOWS
+    /* Same common-DC situation as in ~WindowlessWglContext(). Released only
+       after eglTerminate() above, ANGLE may still use it until then. */
+    if(_deviceContext)
+        ReleaseDC(_window, _deviceContext);
     if(_window)
         DestroyWindow(_window);
     #endif
@@ -637,6 +648,7 @@ WindowlessEglContext& WindowlessEglContext::operator=(WindowlessEglContext&& oth
     #endif
     #ifdef CORRADE_TARGET_WINDOWS
     swap(other._window, _window);
+    swap(other._deviceContext, _deviceContext);
     #endif
     return *this;
 }

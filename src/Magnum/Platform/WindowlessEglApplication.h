@@ -168,6 +168,7 @@ class WindowlessEglContext {
            since EGL/eglplatform.h already does that, there's no reason not to
            use it. void* was also apparently incorrect. */
         HWND _window{};
+        HDC _deviceContext{};
         #endif
         EGLDisplay _display{};
         EGLContext _context{};
