@@ -75,6 +75,10 @@ WindowlessWglContext::WindowlessWglContext(const Configuration& configuration, G
     /* Create the window */
     _window = CreateWindowW(wc.lpszClassName, L"Magnum Windowless Application",
         WS_OVERLAPPEDWINDOW, 0, 0, 32, 32, nullptr, nullptr, wc.hInstance, nullptr);
+    if(!_window) {
+        Error() << "Platform::WindowlessWglContext: cannot create window:" << GetLastError();
+        return;
+    }
 
     /* Get device context from the newly created window and save the previous
        one. In case the previous one is null, wglMakeCurrent(null, ...) would
@@ -107,13 +111,22 @@ WindowlessWglContext::WindowlessWglContext(const Configuration& configuration, G
         0, 0, 0
     };
     const int pixelFormat = ChoosePixelFormat(_deviceContext, &pfd);
-    SetPixelFormat(_deviceContext, pixelFormat, &pfd);
+    if(!pixelFormat || !SetPixelFormat(_deviceContext, pixelFormat, &pfd)) {
+        Error() << "Platform::WindowlessWglContext: cannot set pixel format:" << GetLastError();
+        return;
+    }
 
     /* Create temporary context so we are able to get the pointer to
        wglCreateContextAttribsARB(). To avoid messing up the app state we need
        to save the old active context and then restore it later. */
     const HGLRC currentContext = wglGetCurrentContext();
     const HGLRC temporaryContext = wglCreateContext(_deviceContext);
+    /* Has to be checked explicitly -- wglMakeCurrent() with a null context is
+       the documented way to unbind and would succeed below */
+    if(!temporaryContext) {
+        Error() << "Platform::WindowlessWglContext: cannot create temporary context:" << GetLastError();
+        return;
+    }
     if(!wglMakeCurrent(_deviceContext, temporaryContext)) {
         Error() << "Platform::WindowlessWglContext: cannot make temporary context current:" << GetLastError();
         wglDeleteContext(temporaryContext);
@@ -147,6 +160,13 @@ WindowlessWglContext::WindowlessWglContext(const Configuration& configuration, G
     #if (defined(CORRADE_TARGET_GCC) && !defined(CORRADE_TARGET_CLANG) && __GNUC__ >= 8) || (defined(CORRADE_TARGET_CLANG) && __clang_major__ >= 13)
     #pragma GCC diagnostic pop
     #endif
+
+    if(!wglCreateContextAttribsARB) {
+        Error() << "Platform::WindowlessWglContext: cannot get the wglCreateContextAttribsARB function:" << GetLastError();
+        wglMakeCurrent(currentDeviceContext, currentContext);
+        wglDeleteContext(temporaryContext);
+        return;
+    }
 
     /* Request debug context if GpuValidation is enabled either via the
        configuration or via command-line */
@@ -232,7 +252,7 @@ WindowlessWglContext::WindowlessWglContext(const Configuration& configuration, G
 
             /* Everything failed, at least try to delete the dangling contexts
                and revert to the previous context to regain some sanity */
-            wglMakeCurrent(_deviceContext, currentContext);
+            wglMakeCurrent(currentDeviceContext, currentContext);
             wglDeleteContext(temporaryContext);
             return;
         }
