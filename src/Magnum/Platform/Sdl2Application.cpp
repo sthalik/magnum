@@ -694,7 +694,12 @@ bool Sdl2Application::tryCreate(const Configuration& configuration, const GLConf
         if(!_glContext) Warning()
             << "Platform::Sdl2Application::tryCreate(): cannot create core context:"
             << SDL_GetError() << "(falling back to compatibility context)";
-        else SDL_GL_DeleteContext(_glContext);
+        else {
+            SDL_GL_DeleteContext(_glContext);
+            /* If the window recreation below fails, the destructor would
+               otherwise delete the context a second time */
+            _glContext = nullptr;
+        }
 
         /* Destroy the original window. SDL_GL_SetAttribute() says it should be
            called before creating a window, which kind of implies the
@@ -802,10 +807,12 @@ bool Sdl2Application::tryCreate(const Configuration& configuration, const GLConf
     if(!_context->tryCreate(glConfiguration)) {
         #ifndef CORRADE_TARGET_EMSCRIPTEN
         SDL_GL_DeleteContext(_glContext);
+        _glContext = nullptr;
         SDL_DestroyWindow(_window);
         _window = nullptr;
         #else
         SDL_FreeSurface(_surface);
+        _surface = nullptr;
         #endif
         return false;
     }
