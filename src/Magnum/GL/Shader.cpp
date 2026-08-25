@@ -756,7 +756,12 @@ Shader::Shader(const Type type, const GLuint id, ObjectFlags flags) noexcept: _t
     _fileIndexOffset{}
     {}
 
-Shader::Shader(NoCreateT) noexcept: _type{}, _id{0} {}
+Shader::Shader(NoCreateT) noexcept: _type{}, _id{0}, _flags{ObjectFlag::DeleteOnDestruction},
+    #ifndef MAGNUM_TARGET_GLES
+    _offsetLineByOneOnOldGlsl{},
+    #endif
+    _fileIndexOffset{}
+    {}
 
 Shader::Shader(Shader&& other) noexcept: _type{other._type}, _id{other._id}, _flags{other._flags},
     #ifndef MAGNUM_TARGET_GLES
