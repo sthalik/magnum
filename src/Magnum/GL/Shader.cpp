@@ -765,7 +765,7 @@ Shader::Shader(NoCreateT) noexcept: _type{}, _id{0}, _flags{ObjectFlag::DeleteOn
 
 Shader::Shader(Shader&& other) noexcept: _type{other._type}, _id{other._id}, _flags{other._flags},
     #ifndef MAGNUM_TARGET_GLES
-    _offsetLineByOneOnOldGlsl{other._flags},
+    _offsetLineByOneOnOldGlsl{other._offsetLineByOneOnOldGlsl},
     #endif
     _fileIndexOffset{other._fileIndexOffset},
     _sources{Utility::move(other._sources)}
