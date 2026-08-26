@@ -173,7 +173,7 @@ class MAGNUM_GL_EXPORT Renderbuffer: public AbstractObject {
          * Releases ownership of OpenGL renderbuffer object and returns its ID
          * so it is not deleted on destruction. The internal state is then
          * equivalent to moved-from state.
-         * @see @ref wrap()
+         * @see @ref wrap(), @ref Context::resetState()
          */
         /* MinGW complains loudly if the declaration doesn't also have inline */
         inline GLuint release();
