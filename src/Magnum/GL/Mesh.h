@@ -596,7 +596,7 @@ class MAGNUM_GL_EXPORT Mesh: public AbstractObject {
          * Releases ownership of OpenGL vertex array object and returns its ID
          * so it is not deleted on destruction. The internal state is then
          * equivalent to moved-from state.
-         * @see @ref wrap()
+         * @see @ref wrap(), @ref Context::resetState()
          * @requires_gl30 Extension @gl_extension{ARB,vertex_array_object}
          * @requires_gles30 Extension @gl_extension{OES,vertex_array_object} in
          *      OpenGL ES 2.0.

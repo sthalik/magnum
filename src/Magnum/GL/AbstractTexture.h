@@ -347,7 +347,8 @@ class MAGNUM_GL_EXPORT AbstractTexture: public AbstractObject {
          * @see @ref BufferTexture::wrap(), @ref CubeMapTexture::wrap(),
          *      @ref CubeMapTextureArray::wrap(),
          *      @ref MultisampleTexture::wrap(), @ref RectangleTexture::wrap(),
-         *      @ref Texture::wrap(), @ref TextureArray::wrap()
+         *      @ref Texture::wrap(), @ref TextureArray::wrap(),
+         *      @ref Context::resetState()
          */
         GLuint release();
 
