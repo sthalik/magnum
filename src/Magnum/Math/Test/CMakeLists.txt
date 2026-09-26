@@ -165,9 +165,11 @@ if(NOT CMAKE_CXX_FLAGS MATCHES "-std=")
             MathVector4Cpp14Test
             PROPERTIES CORRADE_CXX_STANDARD 14)
         corrade_add_test(MathFunctionsCpp14Test FunctionsCpp14Test.cpp LIBRARIES MagnumMathTestLib)
+        corrade_add_test(MathFunctionsBatchCpp14Test FunctionsBatchCpp14Test.cpp LIBRARIES MagnumMathTestLib)
         # A parent project's CMAKE_CXX_STANDARD overrides CORRADE_CXX_STANDARD
         set_target_properties(
             MathFunctionsCpp14Test
+            MathFunctionsBatchCpp14Test
             PROPERTIES CXX_STANDARD 14)
    endif()
 endif()
