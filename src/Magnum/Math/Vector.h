@@ -56,9 +56,23 @@
 namespace Magnum { namespace Math {
 
 #ifndef DOXYGEN_GENERATING_OUTPUT
+namespace Implementation {
+    /* __builtin_isnan() rejects integers */
+    template<class T> constexpr bool isNanUnderlying(T, std::true_type) {
+        return false;
+    }
+    template<class T> constexpr bool isNanUnderlying(T value, std::false_type) {
+        #if defined CORRADE_TARGET_GCC || defined CORRADE_TARGET_CLANG
+        return __builtin_isnan(value);
+        #else
+        return std::isnan(value);
+        #endif
+    }
+}
+
 /* Documented in Functions.h, defined here because Vector needs them */
-template<class T, typename std::enable_if<IsScalar<T>::value, int>::type = 0> inline bool isNan(T value) {
-    return std::isnan(UnderlyingTypeOf<T>(value));
+template<class T, typename std::enable_if<IsScalar<T>::value, int>::type = 0> constexpr bool isNan(T value) {
+    return Implementation::isNanUnderlying(UnderlyingTypeOf<T>(value), std::is_integral<UnderlyingTypeOf<T>>{});
 }
 /* Keeping the same parameter names as in Functions.h so the note about
    NaN propagation works here too */
@@ -1604,17 +1618,20 @@ template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline T Vector<size, T>
 
 namespace Implementation {
     /* Non-floating-point types, the first is a non-NaN for sure */
-    template<std::size_t size, class T> constexpr std::size_t firstNonNan(const T(&)[size], std::false_type) {
+    template<class T> constexpr std::size_t firstNonNan(const T*, std::size_t, std::false_type) {
         return 0;
     }
     /* Floating-point types, return the first that's not NaN */
-    template<std::size_t size, class T> inline std::size_t firstNonNan(const T(&data)[size], std::true_type) {
+    template<class T> CORRADE_CONSTEXPR14 inline std::size_t firstNonNan(const T* data, std::size_t size, std::true_type) {
         /* Find the first non-NaN value to compare against. If all are NaN,
            return the last value so the following loop in min/max/minmax()
            doesn't even execute. */
         for(std::size_t i = 0; i != size; ++i) if(!isNan(data[i]))
             return i;
         return size - 1;
+    }
+    template<std::size_t size, class T, class Tag> constexpr std::size_t firstNonNan(const T(&data)[size], Tag tag) {
+        return firstNonNan(data, size, tag);
     }
 }
 

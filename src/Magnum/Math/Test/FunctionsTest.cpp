@@ -35,7 +35,8 @@
 namespace Magnum { namespace Math { namespace Test { namespace {
 
 #undef DO_CE_TESTS
-#if defined CORRADE_CONSTEVAL && (defined MAGNUM_HAS_CONSTEXPR_FMOD || defined MAGNUM_HAS_CONSTEXPR_COPYSIGN)
+#if defined MAGNUM_HAS_CONSTEXPR_FMOD || defined MAGNUM_HAS_CONSTEXPR_COPYSIGN || \
+    defined MAGNUM_HAS_CONSTEXPR_ISNAN || defined MAGNUM_HAS_CONSTEXPR_ISINF
 #define DO_CE_TESTS
 #endif
 
@@ -566,6 +567,7 @@ void FunctionsTest::isInf() {
     CORRADE_VERIFY(Math::isInf(-Constants::inf()));
     CORRADE_VERIFY(!Math::isInf(Constants::nan()));
     CORRADE_VERIFY(!Math::isInf(5.3f));
+    CORRADE_VERIFY(!Math::isInf(5));
 
     /* Wrapped types */
     CORRADE_VERIFY(Math::isInf(-Rad(Constants::inf())));
@@ -578,6 +580,7 @@ void FunctionsTest::isInf() {
 void FunctionsTest::isInfVector() {
     CORRADE_COMPARE(Math::isInf(Vector3{0.3f, -Constants::inf(), 1.0f}), Math::BitVector<3>{0x02});
     CORRADE_COMPARE(Math::isInf(Vector3{0.3f, 1.0f, -Constants::nan()}), Math::BitVector<3>{0x00});
+    CORRADE_COMPARE(Math::isInf(Vector3i{5, -2, 9}), Math::BitVector<3>{0x00});
 }
 
 void FunctionsTest::isNan() {
@@ -585,6 +588,7 @@ void FunctionsTest::isNan() {
     CORRADE_VERIFY(!Math::isNan(-Constants::inf()));
     CORRADE_VERIFY(Math::isNan(Constants::nan()));
     CORRADE_VERIFY(!Math::isNan(5.3f));
+    CORRADE_VERIFY(!Math::isNan(5));
 
     /* Wrapped types */
     CORRADE_VERIFY(Math::isNan(-Rad(Constants::nan())));
@@ -596,6 +600,7 @@ void FunctionsTest::isNan() {
 void FunctionsTest::isNanfVector() {
     CORRADE_COMPARE(Math::isNan(Vector3{0.3f, 1.0f, -Constants::nan()}), Math::BitVector<3>{0x04});
     CORRADE_COMPARE(Math::isNan(Vector3{0.3f, -Constants::inf(), 1.0f}), Math::BitVector<3>{0x00});
+    CORRADE_COMPARE(Math::isNan(Vector3i{5, -2, 9}), Math::BitVector<3>{0x00});
 }
 
 void FunctionsTest::reflect() {
@@ -730,6 +735,42 @@ void FunctionsTest::constantMath() {
         constexpr auto d = Math::copysign(-7., -8.); CMP(d, -7.);
         constexpr auto e = Math::copysign(Vector2d(-1., 2.), Vector2d(3., -4.));
         CMP(e.x(), 1.); CMP(e.y(), -2.);
+    }
+#endif
+#ifdef MAGNUM_HAS_CONSTEXPR_ISNAN
+    {
+        constexpr bool a = Math::isNan(Constants::nan());
+        constexpr bool b = Math::isNan(5.3f);
+        constexpr bool c = Math::isNan(-Constants::nan());
+        constexpr bool d = Math::isNan(5);
+        constexpr BitVector<3> e = Math::isNan(Vector3{0.3f, 1.0f, -Constants::nan()});
+        constexpr BitVector<3> f = Math::isNan(Vector3i{5, -2, 9});
+        CORRADE_VERIFY(a);
+        CORRADE_VERIFY(!b);
+        CORRADE_VERIFY(c);
+        CORRADE_VERIFY(!d);
+        CORRADE_COMPARE(e, BitVector<3>{0x04});
+        CORRADE_COMPARE(f, BitVector<3>{0x00});
+    }
+#endif
+#ifdef MAGNUM_HAS_CONSTEXPR_ISINF
+    {
+        constexpr bool a = Math::isInf(Constants::inf());
+        constexpr bool b = Math::isInf(-Constants::inf());
+        constexpr bool c = Math::isInf(Constants::nan());
+        constexpr bool d = Math::isInf(5.3f);
+        constexpr bool e = Math::isInf(5);
+        constexpr bool f = Math::isInf(-Rad(Constants::inf()));
+        constexpr BitVector<3> g = Math::isInf(Vector3{0.3f, -Constants::inf(), 1.0f});
+        constexpr BitVector<3> h = Math::isInf(Vector3i{5, -2, 9});
+        CORRADE_VERIFY(a);
+        CORRADE_VERIFY(b);
+        CORRADE_VERIFY(!c);
+        CORRADE_VERIFY(!d);
+        CORRADE_VERIFY(!e);
+        CORRADE_VERIFY(f);
+        CORRADE_COMPARE(g, BitVector<3>{0x02});
+        CORRADE_COMPARE(h, BitVector<3>{0x00});
     }
 #endif
 }

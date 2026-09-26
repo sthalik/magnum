@@ -1,5 +1,6 @@
 #pragma once
 #include <Corrade/Utility/Macros.h>
+#include <Corrade/Utility/StlMath.h>
 #include <cstdint>
 #include <type_traits>
 
@@ -75,6 +76,15 @@ template<typename T, typename std::enable_if<std::is_floating_point<T>::value>::
 #define MAGNUM_CONSTEXPR_CEIL
 #define MAGNUM_CONSTEXPR_COPYSIGN
 #define MAGNUM_CONSTEXPR_FMOD
+#endif
+
+/* isNan() and isInf() use __builtin_isnan() and __builtin_isinf() on GCC and
+   Clang. MSVC's std::isnan() and std::isinf() are constexpr only with
+   -Zc:cmath. */
+#if defined CORRADE_TARGET_CXX14 && (defined CORRADE_TARGET_GCC || defined CORRADE_TARGET_CLANG || \
+    (defined __cpp_lib_constexpr_cmath && __cpp_lib_constexpr_cmath >= 202202L))
+#define MAGNUM_HAS_CONSTEXPR_ISNAN
+#define MAGNUM_HAS_CONSTEXPR_ISINF
 #endif
 
 } // namespace ConstantMath

@@ -43,6 +43,7 @@ struct FunctionsBatchTest: TestSuite::Tester {
     void min();
     void max();
     void minmax();
+    void constexprMinMax();
 
     void nanIgnoring();
     void nanIgnoringVector();
@@ -63,6 +64,7 @@ FunctionsBatchTest::FunctionsBatchTest() {
               &FunctionsBatchTest::min,
               &FunctionsBatchTest::max,
               &FunctionsBatchTest::minmax,
+              &FunctionsBatchTest::constexprMinMax,
 
               &FunctionsBatchTest::nanIgnoring,
               &FunctionsBatchTest::nanIgnoringVector,
@@ -204,6 +206,34 @@ void FunctionsBatchTest::minmax() {
 
     /* Wrapped types */
     CORRADE_COMPARE(Math::minmax({1.0_radf, 2.0_radf, 3.0_radf}), Containers::pair(1.0_radf, 3.0_radf));
+}
+
+void FunctionsBatchTest::constexprMinMax() {
+    #ifndef CORRADE_TARGET_CXX14
+    CORRADE_SKIP("C++14 constexpr not available.");
+    #else
+    constexpr Int a = Math::min({5, -2, 9});
+    constexpr Int b = Math::max({5, -2, 9});
+    CORRADE_COMPARE(a, -2);
+    CORRADE_COMPARE(b, 9);
+
+    #ifdef MAGNUM_HAS_CONSTEXPR_ISNAN
+    constexpr Float c = Math::min({Constants::nan(), 1.0f, -3.0f});
+    constexpr Float d = Math::max({Constants::nan(), 1.0f, -3.0f});
+    constexpr Float e = Math::min({Constants::nan(), Constants::nan()});
+    CORRADE_COMPARE(c, -3.0f);
+    CORRADE_COMPARE(d, 1.0f);
+    CORRADE_VERIFY(Math::isNan(e));
+
+    /* cl's constant evaluator treats both nan < x and x < nan as true */
+    #if !defined CORRADE_TARGET_MSVC || defined CORRADE_TARGET_CLANG_CL
+    constexpr Float f = Math::min({1.0f, Constants::nan(), -3.0f});
+    constexpr Float g = Math::max({1.0f, Constants::nan(), -3.0f});
+    CORRADE_COMPARE(f, -3.0f);
+    CORRADE_COMPARE(g, 1.0f);
+    #endif
+    #endif
+    #endif
 }
 
 void FunctionsBatchTest::nanIgnoring() {

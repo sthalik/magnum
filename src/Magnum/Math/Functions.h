@@ -247,6 +247,22 @@ function exactly as their possible STL equivalents, vector overloads perform
 the operations component-wise.
 */
 
+#ifndef DOXYGEN_GENERATING_OUTPUT
+namespace Implementation {
+    /* __builtin_isinf() rejects integers */
+    template<class T> constexpr bool isInfUnderlying(T, std::true_type) {
+        return false;
+    }
+    template<class T> constexpr bool isInfUnderlying(T value, std::false_type) {
+        #if defined CORRADE_TARGET_GCC || defined CORRADE_TARGET_CLANG
+        return __builtin_isinf(value);
+        #else
+        return std::isinf(value);
+        #endif
+    }
+}
+#endif
+
 /**
 @brief If given number is a positive or negative infinity
 @m_since{2019,10}
@@ -258,15 +274,15 @@ template<class T
     #ifndef DOXYGEN_GENERATING_OUTPUT
     , typename std::enable_if<IsScalar<T>::value, int>::type = 0
     #endif
-> inline bool isInf(T value) {
-    return std::isinf(UnderlyingTypeOf<T>(value));
+> constexpr bool isInf(T value) {
+    return Implementation::isInfUnderlying(UnderlyingTypeOf<T>(value), std::is_integral<UnderlyingTypeOf<T>>{});
 }
 
 /**
 @overload
 @m_since{2019,10}
 */
-template<std::size_t size, class T> inline BitVector<size> isInf(const Vector<size, T>& value) {
+template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline BitVector<size> isInf(const Vector<size, T>& value) {
     BitVector<size> out;
     for(std::size_t i = 0; i != size; ++i) if(Math::isInf(value[i]))
         out.set(i);
@@ -286,13 +302,13 @@ template<class T
     #ifndef DOXYGEN_GENERATING_OUTPUT
     , typename std::enable_if<IsScalar<T>::value, int>::type
     #endif
-> bool isNan(T value);
+> constexpr bool isNan(T value);
 
 /**
 @overload
 @m_since{2019,10}
 */
-template<std::size_t size, class T> inline BitVector<size> isNan(const Vector<size, T>& value) {
+template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline BitVector<size> isNan(const Vector<size, T>& value) {
     BitVector<size> out;
     for(std::size_t i = 0; i != size; ++i) if(Math::isNan(value[i]))
         out.set(i);
