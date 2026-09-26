@@ -246,6 +246,23 @@ function exactly as their possible STL equivalents, vector overloads perform
 the operations component-wise.
 */
 
+#ifndef DOXYGEN_GENERATING_OUTPUT
+namespace Implementation {
+    /* __builtin_isinf() rejects integers */
+    template<class T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0> CORRADE_ALWAYS_INLINE constexpr bool isInf(T) {
+        return false;
+    }
+    template<class T, typename std::enable_if<!std::is_integral<T>::value, int>::type = 0> CORRADE_ALWAYS_INLINE constexpr bool isInf(T value) {
+        #if defined CORRADE_TARGET_GCC || defined CORRADE_TARGET_CLANG || \
+            (defined CORRADE_TARGET_MSVC && _MSC_VER >= 1952)
+        return __builtin_isinf(value);
+        #else
+        return std::isinf(value);
+        #endif
+    }
+}
+#endif
+
 /**
 @brief If given number is a positive or negative infinity
 @m_since{2019,10}
@@ -257,15 +274,15 @@ template<class T
     #ifndef DOXYGEN_GENERATING_OUTPUT
     , typename std::enable_if<IsScalar<T>::value, int>::type = 0
     #endif
-> inline bool isInf(T value) {
-    return std::isinf(UnderlyingTypeOf<T>(value));
+> constexpr bool isInf(T value) {
+    return Implementation::isInf(UnderlyingTypeOf<T>(value));
 }
 
 /**
 @overload
 @m_since{2019,10}
 */
-template<std::size_t size, class T> inline BitVector<size> isInf(const Vector<size, T>& value) {
+template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline BitVector<size> isInf(const Vector<size, T>& value) {
     BitVector<size> out;
     for(std::size_t i = 0; i != size; ++i) if(Math::isInf(value[i]))
         out.set(i);

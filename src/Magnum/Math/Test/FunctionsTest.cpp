@@ -80,6 +80,7 @@ struct FunctionsTest: TestSuite::Tester {
     template<class T> void divNegative();
     void isInf();
     void isInfVector();
+    void constexprIsInf();
     void isNan();
     void isNanfVector();
     void constexprIsNan();
@@ -160,6 +161,7 @@ FunctionsTest::FunctionsTest() {
               &FunctionsTest::divNegative<Long>,
               &FunctionsTest::isInf,
               &FunctionsTest::isInfVector,
+              &FunctionsTest::constexprIsInf,
               &FunctionsTest::isNan,
               &FunctionsTest::isNanfVector,
               &FunctionsTest::constexprIsNan,
@@ -642,6 +644,7 @@ void FunctionsTest::isInf() {
     CORRADE_VERIFY(Math::isInf(-Constants::inf()));
     CORRADE_VERIFY(!Math::isInf(Constants::nan()));
     CORRADE_VERIFY(!Math::isInf(5.3f));
+    CORRADE_VERIFY(!Math::isInf(5));
 
     /* Wrapped types */
     CORRADE_VERIFY(Math::isInf(-Rad(Constants::inf())));
@@ -654,6 +657,26 @@ void FunctionsTest::isInf() {
 void FunctionsTest::isInfVector() {
     CORRADE_COMPARE(Math::isInf(Vector3{0.3f, -Constants::inf(), 1.0f}), Math::BitVector<3>{0x02});
     CORRADE_COMPARE(Math::isInf(Vector3{0.3f, 1.0f, -Constants::nan()}), Math::BitVector<3>{0x00});
+    CORRADE_COMPARE(Math::isInf(Vector3i{5, -2, 9}), Math::BitVector<3>{0x00});
+}
+
+void FunctionsTest::constexprIsInf() {
+    #ifndef MAGNUM_HAS_CONSTEXPR_ISINF
+    CORRADE_SKIP("Constexpr isInf() not supported by the compiler.");
+    #else
+    constexpr bool a = Math::isInf(Constants::inf());
+    constexpr bool b = Math::isInf(-Constants::inf());
+    constexpr bool c = Math::isInf(Constants::nan());
+    constexpr bool d = Math::isInf(5.3f);
+    constexpr bool e = Math::isInf(5);
+    constexpr bool f = Math::isInf(-Rad(Constants::inf()));
+    CORRADE_VERIFY(a);
+    CORRADE_VERIFY(b);
+    CORRADE_VERIFY(!c);
+    CORRADE_VERIFY(!d);
+    CORRADE_VERIFY(!e);
+    CORRADE_VERIFY(f);
+    #endif
 }
 
 void FunctionsTest::isNan() {
