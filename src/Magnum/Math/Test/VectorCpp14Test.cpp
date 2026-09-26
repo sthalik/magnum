@@ -46,6 +46,8 @@ struct VectorCpp14Test: TestSuite::Tester {
     void projectedConstexpr();
     void sumProductConstexpr();
     void minMaxIntegralConstexpr();
+    void minMaxConstexpr();
+    void nanIgnoringConstexpr();
 };
 
 /* What's a typedef and not a using differs from the typedefs in root Magnum
@@ -69,7 +71,9 @@ VectorCpp14Test::VectorCpp14Test() {
               &VectorCpp14Test::dotConstexpr,
               &VectorCpp14Test::projectedConstexpr,
               &VectorCpp14Test::sumProductConstexpr,
-              &VectorCpp14Test::minMaxIntegralConstexpr});
+              &VectorCpp14Test::minMaxIntegralConstexpr,
+              &VectorCpp14Test::minMaxConstexpr,
+              &VectorCpp14Test::nanIgnoringConstexpr});
 }
 
 constexpr Vector2 populate() {
@@ -226,6 +230,39 @@ void VectorCpp14Test::minMaxIntegralConstexpr() {
     CORRADE_COMPARE(a, -2);
     CORRADE_COMPARE(b, 3);
     CORRADE_COMPARE(c, Containers::pair(-2, 3));
+}
+
+void VectorCpp14Test::minMaxConstexpr() {
+    #ifndef MAGNUM_HAS_CONSTEXPR_ISNAN
+    CORRADE_SKIP("Constexpr isNan() not supported by the compiler.");
+    #else
+    constexpr Float a = Vector3{1.0f, -2.0f, 3.0f}.min();
+    constexpr Float b = Vector3{1.0f, -2.0f, 3.0f}.max();
+    constexpr Containers::Pair<Float, Float> c = Vector3{-1.0f, 2.0f, -3.0f}.minmax();
+    CORRADE_COMPARE(a, -2.0f);
+    CORRADE_COMPARE(b, 3.0f);
+    CORRADE_COMPARE(c, Containers::pair(-3.0f, 2.0f));
+    #endif
+}
+
+void VectorCpp14Test::nanIgnoringConstexpr() {
+    #ifndef MAGNUM_HAS_CONSTEXPR_ISNAN
+    CORRADE_SKIP("Constexpr isNan() not supported by the compiler.");
+    #else
+    constexpr Float a = Vector3{Constants<Float>::nan(), 1.0f, -3.0f}.min();
+    constexpr Float b = Vector3{Constants<Float>::nan(), 1.0f, -3.0f}.max();
+    constexpr Containers::Pair<Float, Float> c = Vector3{Constants<Float>::nan(), 1.0f, -3.0f}.minmax();
+    constexpr Float d = Vector3{Constants<Float>::nan(), Constants<Float>::nan(), Constants<Float>::nan()}.min();
+    constexpr Float e = Vector3{Constants<Float>::nan(), Constants<Float>::nan(), Constants<Float>::nan()}.max();
+    constexpr Containers::Pair<Float, Float> f = Vector3{Constants<Float>::nan(), Constants<Float>::nan(), Constants<Float>::nan()}.minmax();
+    CORRADE_COMPARE(a, -3.0f);
+    CORRADE_COMPARE(b, 1.0f);
+    CORRADE_COMPARE(c, Containers::pair(-3.0f, 1.0f));
+    CORRADE_COMPARE(d, Constants<Float>::nan());
+    CORRADE_COMPARE(e, Constants<Float>::nan());
+    CORRADE_COMPARE(f.first(), Constants<Float>::nan());
+    CORRADE_COMPARE(f.second(), Constants<Float>::nan());
+    #endif
 }
 
 }}}}
