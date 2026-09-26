@@ -48,6 +48,7 @@ struct FunctionsCpp14Test: TestSuite::Tester {
     void constexprLerpBoolBitVector();
     void constexprFmod();
     void constexprCopysign();
+    void constexprIsNanVector();
 };
 
 using Magnum::Constants;
@@ -68,7 +69,8 @@ FunctionsCpp14Test::FunctionsCpp14Test() {
     addTests({&FunctionsCpp14Test::constexprLerpBoolBitVector});
 
     addTests({&FunctionsCpp14Test::constexprFmod,
-              &FunctionsCpp14Test::constexprCopysign});
+              &FunctionsCpp14Test::constexprCopysign,
+              &FunctionsCpp14Test::constexprIsNanVector});
 }
 
 #define CMP(actual, expected)                                   \
@@ -204,6 +206,19 @@ void FunctionsCpp14Test::constexprCopysign() {
     constexpr auto d = Math::copysign(-7., -8.); CMP(d, -7.);
     constexpr auto e = Math::copysign(Vector2d(-1., 2.), Vector2d(3., -4.));
     CMP(e.x(), 1.); CMP(e.y(), -2.);
+    #endif
+}
+
+void FunctionsCpp14Test::constexprIsNanVector() {
+    #if defined(CORRADE_TARGET_GCC) && !defined(CORRADE_TARGET_CLANG) && __GNUC__*100 + __GNUC_MINOR__ < 602
+    CORRADE_SKIP("Constexpr BitVector::set() not supported by the compiler.");
+    #elif !defined MAGNUM_HAS_CONSTEXPR_ISNAN
+    CORRADE_SKIP("Constexpr isNan() not supported by the compiler.");
+    #else
+    constexpr BitVector<3> a = Math::isNan(Vector3{0.3f, 1.0f, -Constants::nan()});
+    constexpr BitVector<3> b = Math::isNan(Vector3i{5, -2, 9});
+    CORRADE_COMPARE(a, BitVector<3>{0x04});
+    CORRADE_COMPARE(b, BitVector<3>{0x00});
     #endif
 }
 
