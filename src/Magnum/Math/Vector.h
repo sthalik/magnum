@@ -56,9 +56,27 @@
 namespace Magnum { namespace Math {
 
 #ifndef DOXYGEN_GENERATING_OUTPUT
+namespace Implementation {
+    /* __builtin_isnan() rejects integers */
+    template<class T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0> CORRADE_ALWAYS_INLINE constexpr bool isNan(T) {
+        return false;
+    }
+    template<class T, typename std::enable_if<!std::is_integral<T>::value, int>::type = 0> CORRADE_ALWAYS_INLINE constexpr bool isNan(T value) {
+        #if defined CORRADE_TARGET_GCC || defined CORRADE_TARGET_CLANG
+        return __builtin_isnan(value);
+        #elif defined CORRADE_TARGET_MSVC && _MSC_VER >= 1952
+        /* -fp:fast folds __builtin_isnan() to false, std::isnan() keeps the
+           test */
+        return __builtin_is_constant_evaluated() ? __builtin_isnan(value) : std::isnan(value);
+        #else
+        return std::isnan(value);
+        #endif
+    }
+}
+
 /* Documented in Functions.h, defined here because Vector needs them */
-template<class T, typename std::enable_if<IsScalar<T>::value, int>::type = 0> inline bool isNan(T value) {
-    return std::isnan(UnderlyingTypeOf<T>(value));
+template<class T, typename std::enable_if<IsScalar<T>::value, int>::type = 0> constexpr bool isNan(T value) {
+    return Implementation::isNan(UnderlyingTypeOf<T>(value));
 }
 /* Keeping the same parameter names as in Functions.h so the note about
    NaN propagation works here too */
@@ -1612,7 +1630,7 @@ namespace Implementation {
         /* Find the first non-NaN value to compare against. If all are NaN,
            return the last value so the following loop in min/max/minmax()
            doesn't even execute. */
-        for(std::size_t i = 0; i != size; ++i) if(!isNan(data[i]))
+        for(std::size_t i = 0; i != size; ++i) if(!Math::isNan(data[i]))
             return i;
         return size - 1;
     }
