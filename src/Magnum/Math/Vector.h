@@ -1622,17 +1622,20 @@ template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline T Vector<size, T>
 
 namespace Implementation {
     /* Non-floating-point types, the first is a non-NaN for sure */
-    template<std::size_t size, class T> constexpr std::size_t firstNonNan(const T(&)[size], std::false_type) {
+    template<class T> constexpr std::size_t firstNonNan(const T*, std::size_t, std::false_type) {
         return 0;
     }
     /* Floating-point types, return the first that's not NaN */
-    template<std::size_t size, class T> inline std::size_t firstNonNan(const T(&data)[size], std::true_type) {
+    template<class T> CORRADE_CONSTEXPR14 inline std::size_t firstNonNan(const T* data, std::size_t size, std::true_type) {
         /* Find the first non-NaN value to compare against. If all are NaN,
            return the last value so the following loop in min/max/minmax()
            doesn't even execute. */
         for(std::size_t i = 0; i != size; ++i) if(!Math::isNan(data[i]))
             return i;
         return size - 1;
+    }
+    template<std::size_t size, class T, class Tag> constexpr std::size_t firstNonNan(const T(&data)[size], Tag tag) {
+        return firstNonNan(data, size, tag);
     }
 }
 

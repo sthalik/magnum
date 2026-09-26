@@ -240,7 +240,22 @@ template<class Iterable, class T = decltype(Implementation::stridedArrayViewType
 }
 
 /** @overload */
-template<class T> inline T min(std::initializer_list<T> list) {
+template<class T, typename std::enable_if<IsScalar<T>::value, int>::type = 0> CORRADE_CONSTEXPR14 inline T min(std::initializer_list<T> list) {
+    if(list.size() == 0)
+        return {};
+
+    const T* data = list.begin();
+    std::size_t i = Implementation::firstNonNan(data, list.size(), IsFloatingPoint<T>{});
+    T out(data[i]);
+
+    for(++i; i != list.size(); ++i)
+        out = Math::min(out, data[i]);
+
+    return out;
+}
+
+/** @overload */
+template<class T, typename std::enable_if<IsVector<T>::value, int>::type = 0> inline T min(std::initializer_list<T> list) {
     /* Specifying the template explicitly to avoid recursion into the generic
        function again */
     return min<T>(Containers::stridedArrayView(list));
@@ -286,7 +301,22 @@ template<class Iterable, class T = decltype(Implementation::stridedArrayViewType
 }
 
 /** @overload */
-template<class T> inline T max(std::initializer_list<T> list) {
+template<class T, typename std::enable_if<IsScalar<T>::value, int>::type = 0> CORRADE_CONSTEXPR14 inline T max(std::initializer_list<T> list) {
+    if(list.size() == 0)
+        return {};
+
+    const T* data = list.begin();
+    std::size_t i = Implementation::firstNonNan(data, list.size(), IsFloatingPoint<T>{});
+    T out(data[i]);
+
+    for(++i; i != list.size(); ++i)
+        out = Math::max(out, data[i]);
+
+    return out;
+}
+
+/** @overload */
+template<class T, typename std::enable_if<IsVector<T>::value, int>::type = 0> inline T max(std::initializer_list<T> list) {
     /* Specifying the template explicitly to avoid recursion into the generic
        function again */
     return max<T>(Containers::stridedArrayView(list));
