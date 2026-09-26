@@ -224,6 +224,15 @@ template<typename U> CORRADE_ALWAYS_INLINE constexpr Implementation::FloatTypeFo
 #define MAGNUM_CONSTEXPR_FMOD
 #endif
 
+/* GCC 4.8.1+, Clang 6+ and MSVC 19.52+ constant-evaluate __builtin_isnan().
+   MSVC 19.51 crashes constant-evaluating it. */
+#if CORRADE_CXX_STANDARD >= 201402L && !defined CORRADE_MSVC2015_COMPATIBILITY && \
+    (defined CORRADE_TARGET_GCC || defined CORRADE_TARGET_CLANG || \
+     (defined CORRADE_TARGET_MSVC && _MSC_VER >= 1952) || \
+     (defined __cpp_lib_constexpr_cmath && __cpp_lib_constexpr_cmath >= 202202L))
+#define MAGNUM_HAS_CONSTEXPR_ISNAN
+#endif
+
 } // namespace ConstantMath
 } // namespace Magnum
 

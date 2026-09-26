@@ -82,6 +82,7 @@ struct FunctionsTest: TestSuite::Tester {
     void isInfVector();
     void isNan();
     void isNanfVector();
+    void constexprIsNan();
 
     void reflect();
     void reflectNotNormalized();
@@ -161,6 +162,7 @@ FunctionsTest::FunctionsTest() {
               &FunctionsTest::isInfVector,
               &FunctionsTest::isNan,
               &FunctionsTest::isNanfVector,
+              &FunctionsTest::constexprIsNan,
 
               &FunctionsTest::reflect,
               &FunctionsTest::reflectNotNormalized,
@@ -659,6 +661,7 @@ void FunctionsTest::isNan() {
     CORRADE_VERIFY(!Math::isNan(-Constants::inf()));
     CORRADE_VERIFY(Math::isNan(Constants::nan()));
     CORRADE_VERIFY(!Math::isNan(5.3f));
+    CORRADE_VERIFY(!Math::isNan(5));
 
     /* Wrapped types */
     CORRADE_VERIFY(Math::isNan(-Rad(Constants::nan())));
@@ -670,6 +673,22 @@ void FunctionsTest::isNan() {
 void FunctionsTest::isNanfVector() {
     CORRADE_COMPARE(Math::isNan(Vector3{0.3f, 1.0f, -Constants::nan()}), Math::BitVector<3>{0x04});
     CORRADE_COMPARE(Math::isNan(Vector3{0.3f, -Constants::inf(), 1.0f}), Math::BitVector<3>{0x00});
+    CORRADE_COMPARE(Math::isNan(Vector3i{5, -2, 9}), Math::BitVector<3>{0x00});
+}
+
+void FunctionsTest::constexprIsNan() {
+    #ifndef MAGNUM_HAS_CONSTEXPR_ISNAN
+    CORRADE_SKIP("Constexpr isNan() not supported by the compiler.");
+    #else
+    constexpr bool a = Math::isNan(Constants::nan());
+    constexpr bool b = Math::isNan(5.3f);
+    constexpr bool c = Math::isNan(-Constants::nan());
+    constexpr bool d = Math::isNan(5);
+    CORRADE_VERIFY(a);
+    CORRADE_VERIFY(!b);
+    CORRADE_VERIFY(c);
+    CORRADE_VERIFY(!d);
+    #endif
 }
 
 void FunctionsTest::reflect() {

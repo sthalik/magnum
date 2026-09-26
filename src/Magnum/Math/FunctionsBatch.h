@@ -181,7 +181,7 @@ namespace Implementation {
         /* Find the first non-NaN value to compare against. If all are NaN,
            return the last value so the following loop in min/max/minmax()
            doesn't even execute. */
-        for(std::size_t i = 0; i != range.size(); ++i) if(!isNan(range[i]))
+        for(std::size_t i = 0; i != range.size(); ++i) if(!Math::isNan(range[i]))
             return {i, range[i]};
         return {range.size() - 1, range.back()};
     }
@@ -196,12 +196,12 @@ namespace Implementation {
         T out = range[0];
         std::size_t firstValid = 0;
         for(std::size_t i = 1; i != range.size(); ++i) {
-            BitVector<T::Size> nans = isNan(out);
+            BitVector<T::Size> nans = Math::isNan(out);
             if(nans.none())
                 break;
             if(nans.all() && firstValid + 1 == i)
                 ++firstValid;
-            out = Math::lerp(out, range[i], isNan(out));
+            out = Math::lerp(out, range[i], Math::isNan(out));
         }
         return {firstValid, out};
     }
