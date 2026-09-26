@@ -49,6 +49,7 @@ struct FunctionsCpp14Test: TestSuite::Tester {
     void constexprFmod();
     void constexprCopysign();
     void constexprIsNanVector();
+    void constexprIsInfVector();
 };
 
 using Magnum::Constants;
@@ -70,7 +71,8 @@ FunctionsCpp14Test::FunctionsCpp14Test() {
 
     addTests({&FunctionsCpp14Test::constexprFmod,
               &FunctionsCpp14Test::constexprCopysign,
-              &FunctionsCpp14Test::constexprIsNanVector});
+              &FunctionsCpp14Test::constexprIsNanVector,
+              &FunctionsCpp14Test::constexprIsInfVector});
 }
 
 #define CMP(actual, expected)                                   \
@@ -218,6 +220,19 @@ void FunctionsCpp14Test::constexprIsNanVector() {
     constexpr BitVector<3> a = Math::isNan(Vector3{0.3f, 1.0f, -Constants::nan()});
     constexpr BitVector<3> b = Math::isNan(Vector3i{5, -2, 9});
     CORRADE_COMPARE(a, BitVector<3>{0x04});
+    CORRADE_COMPARE(b, BitVector<3>{0x00});
+    #endif
+}
+
+void FunctionsCpp14Test::constexprIsInfVector() {
+    #if defined(CORRADE_TARGET_GCC) && !defined(CORRADE_TARGET_CLANG) && __GNUC__*100 + __GNUC_MINOR__ < 602
+    CORRADE_SKIP("Constexpr BitVector::set() not supported by the compiler.");
+    #elif !defined MAGNUM_HAS_CONSTEXPR_ISINF
+    CORRADE_SKIP("Constexpr isInf() not supported by the compiler.");
+    #else
+    constexpr BitVector<3> a = Math::isInf(Vector3{0.3f, -Constants::inf(), 1.0f});
+    constexpr BitVector<3> b = Math::isInf(Vector3i{5, -2, 9});
+    CORRADE_COMPARE(a, BitVector<3>{0x02});
     CORRADE_COMPARE(b, BitVector<3>{0x00});
     #endif
 }

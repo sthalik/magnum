@@ -224,14 +224,16 @@ template<typename U> CORRADE_ALWAYS_INLINE constexpr Implementation::FloatTypeFo
 #define MAGNUM_CONSTEXPR_FMOD
 #endif
 
-/* isNan() uses __builtin_isnan(), which GCC 4.8.1+ and Clang 6+
-   constant-evaluate even in C++11, and MSVC since 19.52. MSVC 19.51 crashes
-   constant-evaluating it. Other compilers use std::isnan(), constexpr with a
-   C++23 constexpr <cmath>. The vector overload needs C++14 on top. */
+/* isNan() and isInf() use __builtin_isnan() and __builtin_isinf(), which GCC
+   4.8.1+ and Clang 6+ constant-evaluate even in C++11, and MSVC since 19.52.
+   MSVC 19.51 crashes constant-evaluating them. Other compilers use
+   std::isnan() and std::isinf(), constexpr with a C++23 constexpr <cmath>.
+   The vector overloads need C++14 on top. */
 #if defined CORRADE_TARGET_GCC || defined CORRADE_TARGET_CLANG || \
     (defined CORRADE_TARGET_MSVC && _MSC_VER >= 1952) || \
     (defined __cpp_lib_constexpr_cmath && __cpp_lib_constexpr_cmath >= 202202L)
 #define MAGNUM_HAS_CONSTEXPR_ISNAN
+#define MAGNUM_HAS_CONSTEXPR_ISINF
 #endif
 
 } // namespace ConstantMath
