@@ -31,8 +31,6 @@
  * @brief Class @ref Magnum::Timeline
  */
 
-#include <chrono>
-
 #include "Magnum/Types.h"
 #include "Magnum/visibility.h"
 
@@ -150,8 +148,9 @@ class MAGNUM_EXPORT Timeline {
         Float currentFrameDuration() const;
 
     private:
-        std::chrono::high_resolution_clock::time_point _startTime{};
-        std::chrono::high_resolution_clock::time_point _previousFrameTime{};
+        /* Nanoseconds since the clock epoch. Keeps <chrono> out of this header. */
+        Long _startTime{};
+        Long _previousFrameTime{};
         Float _previousFrameDuration{};
 
         bool _running = false;

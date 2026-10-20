@@ -27,25 +27,33 @@
 
 #include "Timeline.h"
 
+#include <chrono>
 #include <Corrade/Utility/Debug.h>
 #include <Corrade/Utility/System.h>
 
 #include "Magnum/Magnum.h"
 
-using namespace std::chrono;
-
 namespace Magnum {
+
+namespace {
+
+Long nowNs() {
+    using namespace std::chrono;
+    return duration_cast<nanoseconds>(high_resolution_clock::now().time_since_epoch()).count();
+}
+
+}
 
 void Timeline::start() {
     _running = true;
-    _startTime = high_resolution_clock::now();
+    _startTime = nowNs();
     _previousFrameTime = _startTime;
     _previousFrameDuration = 0;
 }
 
 void Timeline::stop() {
     _running = false;
-    _startTime = high_resolution_clock::time_point();
+    _startTime = 0;
     _previousFrameTime = _startTime;
     _previousFrameDuration = 0;
 }
@@ -54,22 +62,21 @@ void Timeline::nextFrame() {
     if(!_running)
         return;
 
-    auto now = high_resolution_clock::now();
-    auto duration = UnsignedInt(duration_cast<microseconds>(now-_previousFrameTime).count());
+    const Long now = nowNs();
+    auto duration = UnsignedInt((now-_previousFrameTime)/1000);
     _previousFrameDuration = duration/1e6f;
     _previousFrameTime = now;
 }
 
 Float Timeline::previousFrameTime() const {
-    return duration_cast<microseconds>(_previousFrameTime-_startTime).count()/1e6f;
+    return ((_previousFrameTime-_startTime)/1000)/1e6f;
 }
 
 Float Timeline::currentFrameDuration() const {
     if(!_running)
         return 0;
 
-    auto now = high_resolution_clock::now();
-    auto duration = UnsignedInt(duration_cast<microseconds>(now-_previousFrameTime).count());
+    auto duration = UnsignedInt((nowNs()-_previousFrameTime)/1000);
     return duration/1e6f;
 }
 
@@ -77,8 +84,7 @@ Float Timeline::currentFrameTime() const {
     if(!_running)
         return 0;
 
-    auto now = high_resolution_clock::now();
-    return duration_cast<microseconds>(now-_startTime).count()/1e6f;
+    return ((nowNs()-_startTime)/1000)/1e6f;
 }
 
 }
