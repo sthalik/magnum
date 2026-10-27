@@ -479,11 +479,11 @@ template<class T
 }
 
 /** @overload */
-template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline Vector<size, UnderlyingTypeOf<T>> sign(const Vector<size, T>& a) {
+template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline VectorTypeFor<size, UnderlyingTypeOf<T>> sign(const Vector<size, T>& a) {
     #if CORRADE_CXX_STANDARD >= 202002L
-    Vector<size, UnderlyingTypeOf<T>> out{Magnum::NoInit};
+    VectorTypeFor<size, UnderlyingTypeOf<T>> out{Magnum::NoInit};
     #else
-    Vector<size, UnderlyingTypeOf<T>> out{ZeroInit};
+    VectorTypeFor<size, UnderlyingTypeOf<T>> out{ZeroInit};
     #endif
     for(std::size_t i = 0; i != size; ++i)
         out[i] = Math::sign(a[i]);
@@ -703,8 +703,8 @@ template<class T
 @overload
 @m_since_latest
 */
-template<std::size_t size, class T> inline Vector<size, T> fract(const Vector<size, T>& a) {
-    Vector<size, T> out{Magnum::NoInit};
+template<std::size_t size, class T> inline VectorTypeFor<size, T> fract(const Vector<size, T>& a) {
+    VectorTypeFor<size, T> out{Magnum::NoInit};
     for(std::size_t i = 0; i != size; ++i)
         out[i] = Math::fract(a[i]);
     return out;
@@ -916,8 +916,8 @@ template<UnsignedInt exponent, class T
 }
 
 /** @overload */
-template<UnsignedInt exponent, std::size_t size, class T> inline Vector<size, T> pow(const Vector<size, T>& base) {
-    Vector<size, T> out{Magnum::NoInit};
+template<UnsignedInt exponent, std::size_t size, class T> inline VectorTypeFor<size, T> pow(const Vector<size, T>& base) {
+    VectorTypeFor<size, T> out{Magnum::NoInit};
     for(std::size_t i = 0; i != size; ++i)
         out[i] = Math::pow<exponent>(base[i]);
     return out;
@@ -940,8 +940,8 @@ template<class T
 }
 
 /** @overload */
-template<std::size_t size, class T> inline Vector<size, T> pow(const Vector<size, T>& base, T exponent) {
-    Vector<size, T> out{Magnum::NoInit};
+template<std::size_t size, class T> inline VectorTypeFor<size, T> pow(const Vector<size, T>& base, T exponent) {
+    VectorTypeFor<size, T> out{Magnum::NoInit};
     for(std::size_t i = 0; i != size; ++i)
         out[i] = Math::pow(base[i], exponent);
     return out;
@@ -962,11 +962,11 @@ template<class T
 }
 
 /** @overload */
-template<std::size_t size, class T> MAGNUM_CONSTEXPR_SQRT inline Vector<size, T> sqrt(const Vector<size, T>& a) {
+template<std::size_t size, class T> MAGNUM_CONSTEXPR_SQRT inline VectorTypeFor<size, T> sqrt(const Vector<size, T>& a) {
     #if CORRADE_CXX_STANDARD >= 202002L
-    Vector<size, T> out{Magnum::NoInit};
+    VectorTypeFor<size, T> out{Magnum::NoInit};
     #else
-    Vector<size, T> out{ZeroInit};
+    VectorTypeFor<size, T> out{ZeroInit};
     #endif
     for(std::size_t i = 0; i != size; ++i)
         out[i] = Math::sqrt(a[i]);
@@ -994,8 +994,8 @@ template<class T
 }
 
 /** @overload */
-template<std::size_t size, class T> MAGNUM_CONSTEXPR_SQRT inline Vector<size, T> sqrtInverted(const Vector<size, T>& a) {
-    return Vector<size, T>(T(1))/Math::sqrt(a);
+template<std::size_t size, class T> MAGNUM_CONSTEXPR_SQRT inline VectorTypeFor<size, T> sqrtInverted(const Vector<size, T>& a) {
+    return VectorTypeFor<size, T>(T(1))/Math::sqrt(a);
 }
 
 /* Since 1.8.17, the original short-hand group closing doesn't work anymore.
@@ -1018,7 +1018,7 @@ calculated as: @f[
     @ref Vector::isNormalized(), @ref Matrix3::reflection(),
     @ref Matrix4::reflection()
 */
-template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline Vector<size, T> reflect(const Vector<size, T>& vector, const Vector<size, T>& normal) {
+template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline VectorTypeFor<size, T> reflect(const Vector<size, T>& vector, const Vector<size, T>& normal) {
     CORRADE_CONSTEXPR_DEBUG_ASSERT(normal.isNormalized(),
         "Math::reflect(): normal" << normal << "is not normalized");
     return vector - T(2.0)*dot(vector, normal)*normal;
@@ -1047,7 +1047,7 @@ Wikipedia has a [List of refractive indices](https://en.wikipedia.org/wiki/List_
 @see @ref dot(const Vector<size, T>&, const Vector<size, T>&), @ref reflect(),
     @ref Vector::isNormalized()
 */
-template<std::size_t size, class T> MAGNUM_CONSTEXPR_SQRT inline Vector<size, T> refract(const Vector<size, T>& vector, const Vector<size, T>& normal, T eta) {
+template<std::size_t size, class T> MAGNUM_CONSTEXPR_SQRT inline VectorTypeFor<size, T> refract(const Vector<size, T>& vector, const Vector<size, T>& normal, T eta) {
     CORRADE_CONSTEXPR_DEBUG_ASSERT(vector.isNormalized() && normal.isNormalized(),
         "Math::refract(): vectors" << vector << "and" << normal << "are not normalized");
     const T dot = Math::dot(vector, normal);
