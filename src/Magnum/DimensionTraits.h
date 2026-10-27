@@ -47,8 +47,8 @@ template<UnsignedInt dimensions, class T> struct DimensionTraits {
     /**
      * @brief Vector type
      *
-     * @ref Math::Vector, @ref Math::Vector2 or @ref Math::Vector3 based on
-     * dimension count.
+     * @ref Math::Vector, @ref Math::Vector2, @ref Math::Vector3 or
+     * @ref Math::Vector4 based on dimension count.
      */
     typedef U VectorType;
 
@@ -153,6 +153,14 @@ template<> struct DimensionTraits<3, Double> {
     typedef Math::Vector3<Double> VectorType;
     typedef Math::Range3D<Double> RangeType;
     typedef Math::Matrix4<Double> MatrixType;
+};
+
+template<class T> struct DimensionTraits<4, T> {
+    DimensionTraits() = delete;
+
+    typedef Math::Vector4<T> VectorType;
+    typedef Math::Range<4, T> RangeType;
+    typedef Math::Matrix<4, T> MatrixType;
 };
 #endif
 
