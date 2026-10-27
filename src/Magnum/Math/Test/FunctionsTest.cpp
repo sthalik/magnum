@@ -105,6 +105,87 @@ using Magnum::Vector2;
 using Magnum::Vector3;
 using Magnum::Vector4;
 
+/* Return types of the vector overloads. The value comparisons below pass with
+   the base Vector too. */
+static_assert(std::is_same<decltype(Math::min(Vector2{}, Vector2{})), Vector2>::value, "");
+static_assert(std::is_same<decltype(Math::min(Vector2{}, 1.0f)), Vector2>::value, "");
+static_assert(std::is_same<decltype(Math::max(Vector2{}, Vector2{})), Vector2>::value, "");
+static_assert(std::is_same<decltype(Math::max(Vector2{}, 1.0f)), Vector2>::value, "");
+static_assert(std::is_same<decltype(Math::minmax(Vector2{}, Vector2{})), Containers::Pair<Vector2, Vector2>>::value, "");
+static_assert(std::is_same<decltype(Math::clamp(Vector2{}, Vector2{}, Vector2{})), Vector2>::value, "");
+static_assert(std::is_same<decltype(Math::clamp(Vector2{}, 0.0f, 1.0f)), Vector2>::value, "");
+static_assert(std::is_same<decltype(Math::sign(Vector2{})), Vector2>::value, "");
+static_assert(std::is_same<decltype(Math::abs(Vector2{})), Vector2>::value, "");
+static_assert(std::is_same<decltype(Math::copysign(Vector2{}, Vector2{})), Vector2>::value, "");
+static_assert(std::is_same<decltype(Math::floor(Vector2{})), Vector2>::value, "");
+static_assert(std::is_same<decltype(Math::round(Vector2{})), Vector2>::value, "");
+static_assert(std::is_same<decltype(Math::ceil(Vector2{})), Vector2>::value, "");
+static_assert(std::is_same<decltype(Math::fmod(Vector2{}, Vector2{})), Vector2>::value, "");
+static_assert(std::is_same<decltype(Math::fmod(Vector2{}, 1.0f)), Vector2>::value, "");
+static_assert(std::is_same<decltype(Math::fract(Vector2{})), Vector2>::value, "");
+static_assert(std::is_same<decltype(Math::lerp(Vector2{}, Vector2{}, BitVector<2>{})), Vector2>::value, "");
+static_assert(std::is_same<decltype(Math::lerpInverted(Vector2{}, Vector2{}, Vector2{})), Vector2>::value, "");
+static_assert(std::is_same<decltype(Math::fma(Vector2{}, Vector2{}, Vector2{})), Vector2>::value, "");
+static_assert(std::is_same<decltype(Math::pow<2>(Vector2{})), Vector2>::value, "");
+static_assert(std::is_same<decltype(Math::pow(Vector2{}, 2.0f)), Vector2>::value, "");
+static_assert(std::is_same<decltype(Math::sqrt(Vector2{})), Vector2>::value, "");
+static_assert(std::is_same<decltype(Math::sqrtInverted(Vector2{})), Vector2>::value, "");
+static_assert(std::is_same<decltype(Math::reflect(Vector2{}, Vector2{})), Vector2>::value, "");
+static_assert(std::is_same<decltype(Math::refract(Vector2{}, Vector2{}, 1.0f)), Vector2>::value, "");
+
+static_assert(std::is_same<decltype(Math::min(Vector3{}, Vector3{})), Vector3>::value, "");
+static_assert(std::is_same<decltype(Math::min(Vector3{}, 1.0f)), Vector3>::value, "");
+static_assert(std::is_same<decltype(Math::max(Vector3{}, Vector3{})), Vector3>::value, "");
+static_assert(std::is_same<decltype(Math::max(Vector3{}, 1.0f)), Vector3>::value, "");
+static_assert(std::is_same<decltype(Math::minmax(Vector3{}, Vector3{})), Containers::Pair<Vector3, Vector3>>::value, "");
+static_assert(std::is_same<decltype(Math::clamp(Vector3{}, Vector3{}, Vector3{})), Vector3>::value, "");
+static_assert(std::is_same<decltype(Math::clamp(Vector3{}, 0.0f, 1.0f)), Vector3>::value, "");
+static_assert(std::is_same<decltype(Math::sign(Vector3{})), Vector3>::value, "");
+static_assert(std::is_same<decltype(Math::abs(Vector3{})), Vector3>::value, "");
+static_assert(std::is_same<decltype(Math::copysign(Vector3{}, Vector3{})), Vector3>::value, "");
+static_assert(std::is_same<decltype(Math::floor(Vector3{})), Vector3>::value, "");
+static_assert(std::is_same<decltype(Math::round(Vector3{})), Vector3>::value, "");
+static_assert(std::is_same<decltype(Math::ceil(Vector3{})), Vector3>::value, "");
+static_assert(std::is_same<decltype(Math::fmod(Vector3{}, Vector3{})), Vector3>::value, "");
+static_assert(std::is_same<decltype(Math::fmod(Vector3{}, 1.0f)), Vector3>::value, "");
+static_assert(std::is_same<decltype(Math::fract(Vector3{})), Vector3>::value, "");
+static_assert(std::is_same<decltype(Math::lerp(Vector3{}, Vector3{}, BitVector<3>{})), Vector3>::value, "");
+static_assert(std::is_same<decltype(Math::lerpInverted(Vector3{}, Vector3{}, Vector3{})), Vector3>::value, "");
+static_assert(std::is_same<decltype(Math::fma(Vector3{}, Vector3{}, Vector3{})), Vector3>::value, "");
+static_assert(std::is_same<decltype(Math::pow<2>(Vector3{})), Vector3>::value, "");
+static_assert(std::is_same<decltype(Math::pow(Vector3{}, 2.0f)), Vector3>::value, "");
+static_assert(std::is_same<decltype(Math::sqrt(Vector3{})), Vector3>::value, "");
+static_assert(std::is_same<decltype(Math::sqrtInverted(Vector3{})), Vector3>::value, "");
+static_assert(std::is_same<decltype(Math::reflect(Vector3{}, Vector3{})), Vector3>::value, "");
+static_assert(std::is_same<decltype(Math::refract(Vector3{}, Vector3{}, 1.0f)), Vector3>::value, "");
+
+static_assert(std::is_same<decltype(Math::min(Vector4{}, Vector4{})), Vector4>::value, "");
+static_assert(std::is_same<decltype(Math::min(Vector4{}, 1.0f)), Vector4>::value, "");
+static_assert(std::is_same<decltype(Math::max(Vector4{}, Vector4{})), Vector4>::value, "");
+static_assert(std::is_same<decltype(Math::max(Vector4{}, 1.0f)), Vector4>::value, "");
+static_assert(std::is_same<decltype(Math::minmax(Vector4{}, Vector4{})), Containers::Pair<Vector4, Vector4>>::value, "");
+static_assert(std::is_same<decltype(Math::clamp(Vector4{}, Vector4{}, Vector4{})), Vector4>::value, "");
+static_assert(std::is_same<decltype(Math::clamp(Vector4{}, 0.0f, 1.0f)), Vector4>::value, "");
+static_assert(std::is_same<decltype(Math::sign(Vector4{})), Vector4>::value, "");
+static_assert(std::is_same<decltype(Math::sign(Vector2i{})), Vector2i>::value, "");
+static_assert(std::is_same<decltype(Math::abs(Vector4{})), Vector4>::value, "");
+static_assert(std::is_same<decltype(Math::copysign(Vector4{}, Vector4{})), Vector4>::value, "");
+static_assert(std::is_same<decltype(Math::floor(Vector4{})), Vector4>::value, "");
+static_assert(std::is_same<decltype(Math::round(Vector4{})), Vector4>::value, "");
+static_assert(std::is_same<decltype(Math::ceil(Vector4{})), Vector4>::value, "");
+static_assert(std::is_same<decltype(Math::fmod(Vector4{}, Vector4{})), Vector4>::value, "");
+static_assert(std::is_same<decltype(Math::fmod(Vector4{}, 1.0f)), Vector4>::value, "");
+static_assert(std::is_same<decltype(Math::fract(Vector4{})), Vector4>::value, "");
+static_assert(std::is_same<decltype(Math::lerp(Vector4{}, Vector4{}, BitVector<4>{})), Vector4>::value, "");
+static_assert(std::is_same<decltype(Math::lerpInverted(Vector4{}, Vector4{}, Vector4{})), Vector4>::value, "");
+static_assert(std::is_same<decltype(Math::fma(Vector4{}, Vector4{}, Vector4{})), Vector4>::value, "");
+static_assert(std::is_same<decltype(Math::pow<2>(Vector4{})), Vector4>::value, "");
+static_assert(std::is_same<decltype(Math::pow(Vector4{}, 2.0f)), Vector4>::value, "");
+static_assert(std::is_same<decltype(Math::sqrt(Vector4{})), Vector4>::value, "");
+static_assert(std::is_same<decltype(Math::sqrtInverted(Vector4{})), Vector4>::value, "");
+static_assert(std::is_same<decltype(Math::reflect(Vector4{}, Vector4{})), Vector4>::value, "");
+static_assert(std::is_same<decltype(Math::refract(Vector4{}, Vector4{}, 1.0f)), Vector4>::value, "");
+
 FunctionsTest::FunctionsTest() {
     addRepeatedTests<FunctionsTest>({
         &FunctionsTest::popcount<UnsignedInt>,
