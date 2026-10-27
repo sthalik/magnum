@@ -132,7 +132,11 @@ template<class T, typename std::enable_if<IsIntegral<T>::value, int>::type = 0> 
 /* sRGB -> RGB conversion */
 template<class T, typename std::enable_if<IsFloatingPoint<T>::value, int>::type = 0> inline Color3<T> fromSrgb(const Vector3<T>& srgb) {
     constexpr const T a(T(0.055));
-    return lerp(srgb/T(12.92), pow((srgb + Vector3<T>{a})/(T(1.0) + a), T(2.4)), srgb > Vector3<T>(T(0.04045)));
+    /* Qualified, because an unqualified lerp() inside Implementation also
+       finds Implementation::lerp(). When both values have the same type, that
+       one beats the BitVector overload and fails to compile on the BitVector
+       phase. */
+    return Math::lerp(srgb/T(12.92), pow((srgb + Vector3<T>{a})/(T(1.0) + a), T(2.4)), srgb > Vector3<T>(T(0.04045)));
 }
 template<class T, typename std::enable_if<IsFloatingPoint<T>::value, int>::type = 0> inline Color4<T> fromSrgbAlpha(const Vector4<T>& srgbAlpha) {
     return {fromSrgb<T>(srgbAlpha.rgb()), srgbAlpha.a()};
@@ -179,7 +183,8 @@ template<class T, typename std::enable_if<IsIntegral<T>::value, int>::type = 0> 
 /* RGB -> sRGB conversion */
 template<class T, typename std::enable_if<IsFloatingPoint<T>::value, int>::type = 0> Vector3<typename Color3<T>::FloatingPointType> toSrgb(const Color3<T>& rgb) {
     constexpr const T a = T(0.055);
-    return lerp(rgb*T(12.92), (T(1.0) + a)*pow(rgb, T(1.0)/T(2.4)) - Vector3<T>{a}, rgb > Vector3<T>(T(0.0031308)));
+    /* Qualified for the same reason as in fromSrgb() */
+    return Math::lerp(rgb*T(12.92), (T(1.0) + a)*pow(rgb, T(1.0)/T(2.4)) - Vector3<T>{a}, rgb > Vector3<T>(T(0.0031308)));
 }
 template<class T, typename std::enable_if<IsFloatingPoint<T>::value, int>::type = 0> Vector4<typename Color4<T>::FloatingPointType> toSrgbAlpha(const Color4<T>& rgba) {
     return {toSrgb<T>(rgba.rgb()), rgba.a()};
