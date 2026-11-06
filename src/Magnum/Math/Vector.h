@@ -1773,10 +1773,8 @@ template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline Containers::Pair<
     T min{_data[i]}, max{_data[i]};
 
     for(++i; i != size; ++i) {
-        if(_data[i] < min)
-            min = _data[i];
-        else if(_data[i] > max)
-            max = _data[i];
+        min = Math::min(min, _data[i]);
+        max = Math::max(max, _data[i]);
     }
 
     return {min, max};

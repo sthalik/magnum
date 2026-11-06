@@ -331,10 +331,8 @@ template<class T, std::size_t size> inline T max(const T(&array)[size]) {
 
 namespace Implementation {
     template<class T, typename std::enable_if<IsScalar<T>::value, int>::type = 0> inline void minmax(T& min, T& max, T value) {
-        if(value < min)
-            min = value;
-        else if(value > max)
-            max = value;
+        min = Math::min(min, value);
+        max = Math::max(max, value);
     }
     template<std::size_t size, class T> inline void minmax(Vector<size, T>& min, Vector<size, T>& max, const Vector<size, T>& value) {
         for(std::size_t i = 0; i != size; ++i)
