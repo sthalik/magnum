@@ -433,6 +433,7 @@ template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline VectorTypeFor<siz
 /**
 @brief Minimum and maximum of two values
 
+<em>NaN</em>s passed in the @p a parameter are propagated.
 @see @ref min(), @ref max(), @ref clamp(),
     @ref minmax(const Containers::StridedArrayView1D<const T>&),
     @ref Vector::minmax(),
@@ -443,11 +444,12 @@ template<class T
     , typename std::enable_if<IsScalar<T>::value, int>::type = 0
     #endif
 > constexpr inline Containers::Pair<T, T> minmax(T a, T b) {
-    return a < b ? Containers::pair(a, b) : Containers::pair(b, a);
+    return Containers::pair(Math::min(a, b), Math::max(a, b));
 }
 
 /** @overload */
 template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline Containers::Pair<VectorTypeFor<size, T>, VectorTypeFor<size, T>> minmax(const Vector<size, T>& a, const Vector<size, T>& b) {
+    #if defined(CORRADE_TARGET_MSVC) && !defined(CORRADE_TARGET_CLANG_CL)
     Containers::Pair<VectorTypeFor<size, T>, VectorTypeFor<size, T>> out{a, b};
     for(std::size_t i = 0; i != size; ++i) if(out.first()[i] > out.second()[i]) {
         /* Utility::swap() isn't constexpr */
@@ -456,6 +458,9 @@ template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline Containers::Pair<
         out.second()[i] = t;
     }
     return out;
+    #else
+    return {Math::min(a, b), Math::max(a, b)};
+    #endif
 }
 
 /**
