@@ -53,6 +53,14 @@
 #include <Corrade/Containers/PairStl.h>
 #endif
 
+/* Without the pragma GCC unrolls these loops only late, after which
+   ~(a < b).any() keeps the < and costs an XOR */
+#if defined(CORRADE_TARGET_GCC) && !defined(CORRADE_TARGET_CLANG) && __GNUC__ >= 8
+#define _MAGNUM_GCC_UNROLL _Pragma("GCC unroll 16")
+#else
+#define _MAGNUM_GCC_UNROLL
+#endif
+
 namespace Magnum { namespace Math {
 
 #ifndef DOXYGEN_GENERATING_OUTPUT
@@ -106,6 +114,7 @@ namespace Implementation {
     /* To make gather() / scatter() faster */
     template<std::size_t, std::size_t> struct GatherComponentAt;
     template<std::size_t, std::size_t, bool> struct ScatterComponentOr;
+    template<std::size_t, class, bool, bool> struct VectorEqual;
     template<class T, std::size_t valueSize, char, char...> constexpr T scatterRecursive(const T&, const Vector<valueSize, typename T::Type>&, std::size_t);
 
 template<class T> MAGNUM_CONSTEXPR_SQRT inline T sqrtImpl(T x) {
@@ -1261,8 +1270,7 @@ template<std::size_t size, class T> class Vector {
 
         /* So the out-of-class comparators can access data directly to avoid
            function call overhead */
-        template<std::size_t size_, class T_> friend BitVector<size_> equal(const Vector<size_, T_>&, const Vector<size_, T_>&);
-        template<std::size_t size_, class T_> friend BitVector<size_> notEqual(const Vector<size_, T_>&, const Vector<size_, T_>&);
+        template<std::size_t, class, bool, bool> friend struct Implementation::VectorEqual;
 
         template<std::size_t size_, class U> CORRADE_CONSTEXPR14 friend U dot(const Vector<size_, U>&, const Vector<size_, U>&);
 
@@ -1287,6 +1295,63 @@ template<std::size_t size, class T> class Vector {
         }
 };
 
+#ifndef DOXYGEN_GENERATING_OUTPUT
+namespace Implementation {
+    /* Clang and MSVC call the floating-point variants out of line for 4, 6
+       and 8 components. Force-inlined integer variants get longer on clang. */
+    template<std::size_t size, class T, bool = IsFloatingPoint<T>::value, bool = (size > Implementation::BitVectorMaxUnpackedSize)> struct VectorEqual {
+        static BitVector<size> equal(const Vector<size, T>& a, const Vector<size, T>& b) {
+            BitVector<size> out;
+            _MAGNUM_GCC_UNROLL
+            for(std::size_t i = 0; i != size; ++i)
+                out.set(i, TypeTraits<T>::equals(a._data[i], b._data[i]));
+            return out;
+        }
+        static BitVector<size> notEqual(const Vector<size, T>& a, const Vector<size, T>& b) {
+            BitVector<size> out;
+            _MAGNUM_GCC_UNROLL
+            for(std::size_t i = 0; i != size; ++i)
+                out.set(i, !TypeTraits<T>::equals(a._data[i], b._data[i]));
+            return out;
+        }
+    };
+    template<std::size_t size, class T> struct VectorEqual<size, T, true, false> {
+        CORRADE_ALWAYS_INLINE static BitVector<size> equal(const Vector<size, T>& a, const Vector<size, T>& b) {
+            BitVector<size> out;
+            _MAGNUM_GCC_UNROLL
+            for(std::size_t i = 0; i != size; ++i)
+                out.set(i, TypeTraits<T>::equals(a._data[i], b._data[i]));
+            return out;
+        }
+        CORRADE_ALWAYS_INLINE static BitVector<size> notEqual(const Vector<size, T>& a, const Vector<size, T>& b) {
+            BitVector<size> out;
+            _MAGNUM_GCC_UNROLL
+            for(std::size_t i = 0; i != size; ++i)
+                out.set(i, !TypeTraits<T>::equals(a._data[i], b._data[i]));
+            return out;
+        }
+    };
+    template<std::size_t size, class T, bool floatingPoint> struct VectorEqual<size, T, floatingPoint, true> {
+        static BitVector<size> equal(const Vector<size, T>& a, const Vector<size, T>& b) {
+            BitVector<size> out;
+
+            for(std::size_t i = 0; i != size; ++i)
+                out.set(i, TypeTraits<T>::equals(a._data[i], b._data[i]));
+
+            return out;
+        }
+        static BitVector<size> notEqual(const Vector<size, T>& a, const Vector<size, T>& b) {
+            BitVector<size> out;
+
+            for(std::size_t i = 0; i != size; ++i)
+                out.set(i, !TypeTraits<T>::equals(a._data[i], b._data[i]));
+
+            return out;
+        }
+    };
+}
+#endif
+
 /** @relatesalso Vector
 @brief Component-wise equality comparison
 @m_since{2019,10}
@@ -1294,13 +1359,8 @@ template<std::size_t size, class T> class Vector {
 Unlike @ref Vector::operator==() returns a @ref BitVector instead of a single
 value. Vector complement to @ref equal(T, T).
 */
-template<std::size_t size, class T> inline BitVector<size> equal(const Vector<size, T>& a, const Vector<size, T>& b) {
-    BitVector<size> out;
-
-    for(std::size_t i = 0; i != size; ++i)
-        out.set(i, TypeTraits<T>::equals(a._data[i], b._data[i]));
-
-    return out;
+template<std::size_t size, class T> CORRADE_ALWAYS_INLINE BitVector<size> equal(const Vector<size, T>& a, const Vector<size, T>& b) {
+    return Implementation::VectorEqual<size, T>::equal(a, b);
 }
 
 /** @relatesalso Vector
@@ -1310,13 +1370,8 @@ template<std::size_t size, class T> inline BitVector<size> equal(const Vector<si
 Unlike @ref Vector::operator!=() returns a @ref BitVector instead of a single
 value. Vector complement to @ref notEqual(T, T).
 */
-template<std::size_t size, class T> inline BitVector<size> notEqual(const Vector<size, T>& a, const Vector<size, T>& b) {
-    BitVector<size> out;
-
-    for(std::size_t i = 0; i != size; ++i)
-        out.set(i, !TypeTraits<T>::equals(a._data[i], b._data[i]));
-
-    return out;
+template<std::size_t size, class T> CORRADE_ALWAYS_INLINE BitVector<size> notEqual(const Vector<size, T>& a, const Vector<size, T>& b) {
+    return Implementation::VectorEqual<size, T>::notEqual(a, b);
 }
 
 #ifndef CORRADE_SINGLES_NO_DEBUG
@@ -1559,6 +1614,21 @@ template<std::size_t size, class FloatingPoint, class Integral, typename std::en
 template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline BitVector<size> Vector<size, T>::operator<(const Vector<size, T>& other) const {
     BitVector<size> out;
 
+    if(size <= Implementation::BitVectorMaxUnpackedSize) {
+        #if defined(CORRADE_TARGET_MSVC) && !defined(CORRADE_TARGET_CLANG_CL)
+        /* With a for loop, MSVC packs the bools into one word and unpacks
+           them again. A do-while loop keeps them in separate registers. */
+        std::size_t i = 0;
+        do out.set(i, _data[i] < other._data[i]);
+        while(++i != size);
+        #else
+        _MAGNUM_GCC_UNROLL
+        for(std::size_t i = 0; i != size; ++i)
+            out.set(i, _data[i] < other._data[i]);
+        #endif
+        return out;
+    }
+
     for(std::size_t i = 0; i != size; ++i)
         out.set(i, _data[i] < other._data[i]);
 
@@ -1567,6 +1637,19 @@ template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline BitVector<size> V
 
 template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline BitVector<size> Vector<size, T>::operator<=(const Vector<size, T>& other) const {
     BitVector<size> out;
+
+    if(size <= Implementation::BitVectorMaxUnpackedSize) {
+        #if defined(CORRADE_TARGET_MSVC) && !defined(CORRADE_TARGET_CLANG_CL)
+        std::size_t i = 0;
+        do out.set(i, _data[i] <= other._data[i]);
+        while(++i != size);
+        #else
+        _MAGNUM_GCC_UNROLL
+        for(std::size_t i = 0; i != size; ++i)
+            out.set(i, _data[i] <= other._data[i]);
+        #endif
+        return out;
+    }
 
     for(std::size_t i = 0; i != size; ++i)
         out.set(i, _data[i] <= other._data[i]);
@@ -1577,6 +1660,19 @@ template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline BitVector<size> V
 template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline BitVector<size> Vector<size, T>::operator>=(const Vector<size, T>& other) const {
     BitVector<size> out;
 
+    if(size <= Implementation::BitVectorMaxUnpackedSize) {
+        #if defined(CORRADE_TARGET_MSVC) && !defined(CORRADE_TARGET_CLANG_CL)
+        std::size_t i = 0;
+        do out.set(i, _data[i] >= other._data[i]);
+        while(++i != size);
+        #else
+        _MAGNUM_GCC_UNROLL
+        for(std::size_t i = 0; i != size; ++i)
+            out.set(i, _data[i] >= other._data[i]);
+        #endif
+        return out;
+    }
+
     for(std::size_t i = 0; i != size; ++i)
         out.set(i, _data[i] >= other._data[i]);
 
@@ -1585,6 +1681,19 @@ template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline BitVector<size> V
 
 template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline BitVector<size> Vector<size, T>::operator>(const Vector<size, T>& other) const {
     BitVector<size> out;
+
+    if(size <= Implementation::BitVectorMaxUnpackedSize) {
+        #if defined(CORRADE_TARGET_MSVC) && !defined(CORRADE_TARGET_CLANG_CL)
+        std::size_t i = 0;
+        do out.set(i, _data[i] > other._data[i]);
+        while(++i != size);
+        #else
+        _MAGNUM_GCC_UNROLL
+        for(std::size_t i = 0; i != size; ++i)
+            out.set(i, _data[i] > other._data[i]);
+        #endif
+        return out;
+    }
 
     for(std::size_t i = 0; i != size; ++i)
         out.set(i, _data[i] > other._data[i]);

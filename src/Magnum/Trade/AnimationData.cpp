@@ -81,10 +81,12 @@ UnsignedInt animationTrackTypeSize(const AnimationTrackType type) {
     #endif
     switch(type) {
         case AnimationTrackType::Bool:
-        case AnimationTrackType::BitVector2:
-        case AnimationTrackType::BitVector3:
-        case AnimationTrackType::BitVector4:
             return 1;
+        case AnimationTrackType::BitVector2:
+            return 2;
+        case AnimationTrackType::BitVector3:
+            return 3;
+        case AnimationTrackType::BitVector4:
         case AnimationTrackType::Float:
         case AnimationTrackType::UnsignedInt:
         case AnimationTrackType::Int:
