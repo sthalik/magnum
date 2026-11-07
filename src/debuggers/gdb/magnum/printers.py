@@ -139,6 +139,7 @@ class MagnumBitVector(MagnumTypePrinter):
             self.data = data
             self.size = size
             self.count = 0
+            self.unpacked = data.type.strip_typedefs().target().strip_typedefs().code == gdb.TYPE_CODE_BOOL
 
         def __iter__(self):
             return self
@@ -148,6 +149,8 @@ class MagnumBitVector(MagnumTypePrinter):
             self.count = self.count + 1
             if count == self.size:
                 raise StopIteration
+            if self.unpacked:
+                return (f"[{count}]", bool(self.data[count]))
             return (f"[{count}]", bool((self.data[int(count/8)] >> count%8) & 0x01))
 
     def __init__(self, val: gdb.Value):

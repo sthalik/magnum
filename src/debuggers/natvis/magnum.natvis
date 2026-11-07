@@ -105,21 +105,21 @@
   </Type>
   <!-- Math::BitVector2 -->
   <Type Name="Magnum::Math::BitVector&lt;2&gt;">
-    <Intrinsic Name="at" Category="Method" Expression="(bool)((_data[0] &gt;&gt; i) &amp; 1)">
+    <Intrinsic Name="at" Category="Method" Expression="_data[i]">
       <Parameter Name="i" Type="int" />
     </Intrinsic>
     <DisplayString>{{ {at(0)}, {at(1)} }}</DisplayString>
   </Type>
   <!-- Math::BitVector3 -->
   <Type Name="Magnum::Math::BitVector&lt;3&gt;">
-    <Intrinsic Name="at" Category="Method" Expression="(bool)((_data[0] &gt;&gt; i) &amp; 1)">
+    <Intrinsic Name="at" Category="Method" Expression="_data[i]">
       <Parameter Name="i" Type="int" />
     </Intrinsic>
     <DisplayString>{{ {at(0)}, {at(1)}, {at(2)} }}</DisplayString>
   </Type>
   <!-- Math::BitVector4 -->
   <Type Name="Magnum::Math::BitVector&lt;4&gt;">
-    <Intrinsic Name="at" Category="Method" Expression="(bool)((_data[0] &gt;&gt; i) &amp; 1)">
+    <Intrinsic Name="at" Category="Method" Expression="_data[i]">
       <Parameter Name="i" Type="int" />
     </Intrinsic>
     <DisplayString>{{ {at(0)}, {at(1)}, {at(2)}, {at(3)} }}</DisplayString>

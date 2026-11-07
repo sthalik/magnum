@@ -29,6 +29,14 @@
 set(CMAKE_FOLDER "Magnum/Math/Test")
 
 corrade_add_test(MathBitVectorTest BitVectorTest.cpp LIBRARIES MagnumMathTestLib)
+corrade_add_test(MathBitVectorUnpackedTest BitVectorUnpackedTest.cpp LIBRARIES MagnumMathTestLib)
+# Links no Magnum library, whose objects are built with the default limit
+corrade_add_test(MathBitVectorUnpacked16Test BitVectorUnpackedTest.cpp)
+target_include_directories(MathBitVectorUnpacked16Test PRIVATE
+    ${PROJECT_SOURCE_DIR}/src
+    ${PROJECT_BINARY_DIR}/src)
+target_compile_definitions(MathBitVectorUnpacked16Test PRIVATE
+    MAGNUM_MATH_BITVECTOR_MAX_UNPACKED_SIZE=16)
 corrade_add_test(MathConstantMathTest ConstantMathTest.cpp LIBRARIES MagnumMathTestLib)
 set_target_properties(MathConstantMathTest PROPERTIES CORRADE_CXX_STANDARD 14)
 corrade_add_test(MathConstantsTest ConstantsTest.cpp LIBRARIES MagnumMathTestLib)

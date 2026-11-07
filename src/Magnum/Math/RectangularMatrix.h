@@ -338,38 +338,83 @@ template<std::size_t cols, std::size_t rows, class T> class RectangularMatrix {
         /**
          * @brief Component-wise less than
          *
-         * Calls @ref Vector::operator<() on @ref toVector().
+         * The bits are in the order of @ref toVector().
          */
-        BitVector<cols*rows> operator<(const RectangularMatrix<cols, rows, T>& other) const {
+        #ifdef DOXYGEN_GENERATING_OUTPUT
+        BitVector<cols*rows> operator<(const RectangularMatrix<cols, rows, T>& other) const;
+        #else
+        template<std::size_t size_ = cols*rows, typename std::enable_if<(size_ <= Implementation::BitVectorMaxUnpackedSize), int>::type = 0> BitVector<cols*rows> operator<(const RectangularMatrix<cols, rows, T>& other) const {
+            /* GCC splits the toVector() copy into 64-bit integers */
+            BitVector<cols*rows> out;
+            for(std::size_t col = 0; col != cols; ++col)
+                for(std::size_t row = 0; row != rows; ++row)
+                    out.set(col*rows + row, _data[col][row] < other._data[col][row]);
+            return out;
+        }
+        template<std::size_t size_ = cols*rows, typename std::enable_if<(size_ > Implementation::BitVectorMaxUnpackedSize), int>::type = 0> BitVector<cols*rows> operator<(const RectangularMatrix<cols, rows, T>& other) const {
             return toVector() < other.toVector();
         }
+        #endif
 
         /**
          * @brief Component-wise less than or equal
          *
-         * Calls @ref Vector::operator<=() on @ref toVector().
+         * The bits are in the order of @ref toVector().
          */
-        BitVector<cols*rows> operator<=(const RectangularMatrix<cols, rows, T>& other) const {
+        #ifdef DOXYGEN_GENERATING_OUTPUT
+        BitVector<cols*rows> operator<=(const RectangularMatrix<cols, rows, T>& other) const;
+        #else
+        template<std::size_t size_ = cols*rows, typename std::enable_if<(size_ <= Implementation::BitVectorMaxUnpackedSize), int>::type = 0> BitVector<cols*rows> operator<=(const RectangularMatrix<cols, rows, T>& other) const {
+            BitVector<cols*rows> out;
+            for(std::size_t col = 0; col != cols; ++col)
+                for(std::size_t row = 0; row != rows; ++row)
+                    out.set(col*rows + row, _data[col][row] <= other._data[col][row]);
+            return out;
+        }
+        template<std::size_t size_ = cols*rows, typename std::enable_if<(size_ > Implementation::BitVectorMaxUnpackedSize), int>::type = 0> BitVector<cols*rows> operator<=(const RectangularMatrix<cols, rows, T>& other) const {
             return toVector() <= other.toVector();
         }
+        #endif
 
         /**
          * @brief Component-wise greater than or equal
          *
-         * Calls @ref Vector::operator>=() on @ref toVector().
+         * The bits are in the order of @ref toVector().
          */
-        BitVector<cols*rows> operator>=(const RectangularMatrix<cols, rows, T>& other) const {
+        #ifdef DOXYGEN_GENERATING_OUTPUT
+        BitVector<cols*rows> operator>=(const RectangularMatrix<cols, rows, T>& other) const;
+        #else
+        template<std::size_t size_ = cols*rows, typename std::enable_if<(size_ <= Implementation::BitVectorMaxUnpackedSize), int>::type = 0> BitVector<cols*rows> operator>=(const RectangularMatrix<cols, rows, T>& other) const {
+            BitVector<cols*rows> out;
+            for(std::size_t col = 0; col != cols; ++col)
+                for(std::size_t row = 0; row != rows; ++row)
+                    out.set(col*rows + row, _data[col][row] >= other._data[col][row]);
+            return out;
+        }
+        template<std::size_t size_ = cols*rows, typename std::enable_if<(size_ > Implementation::BitVectorMaxUnpackedSize), int>::type = 0> BitVector<cols*rows> operator>=(const RectangularMatrix<cols, rows, T>& other) const {
             return toVector() >= other.toVector();
         }
+        #endif
 
         /**
          * @brief Component-wise greater than
          *
-         * Calls @ref Vector::operator>() on @ref toVector().
+         * The bits are in the order of @ref toVector().
          */
-        BitVector<cols*rows> operator>(const RectangularMatrix<cols, rows, T>& other) const {
+        #ifdef DOXYGEN_GENERATING_OUTPUT
+        BitVector<cols*rows> operator>(const RectangularMatrix<cols, rows, T>& other) const;
+        #else
+        template<std::size_t size_ = cols*rows, typename std::enable_if<(size_ <= Implementation::BitVectorMaxUnpackedSize), int>::type = 0> BitVector<cols*rows> operator>(const RectangularMatrix<cols, rows, T>& other) const {
+            BitVector<cols*rows> out;
+            for(std::size_t col = 0; col != cols; ++col)
+                for(std::size_t row = 0; row != rows; ++row)
+                    out.set(col*rows + row, _data[col][row] > other._data[col][row]);
+            return out;
+        }
+        template<std::size_t size_ = cols*rows, typename std::enable_if<(size_ > Implementation::BitVectorMaxUnpackedSize), int>::type = 0> BitVector<cols*rows> operator>(const RectangularMatrix<cols, rows, T>& other) const {
             return toVector() > other.toVector();
         }
+        #endif
 
         /**
          * @brief Promotion

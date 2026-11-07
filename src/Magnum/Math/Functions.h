@@ -282,12 +282,26 @@ template<class T
 @overload
 @m_since{2019,10}
 */
-template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline BitVector<size> isInf(const Vector<size, T>& value) {
+template<std::size_t size, class T
+    #ifndef DOXYGEN_GENERATING_OUTPUT
+    , typename std::enable_if<(size <= Implementation::BitVectorMaxUnpackedSize), int>::type = 0
+    #endif
+> CORRADE_CONSTEXPR14 inline BitVector<size> isInf(const Vector<size, T>& value) {
+    BitVector<size> out;
+    _MAGNUM_GCC_UNROLL
+    for(std::size_t i = 0; i != size; ++i)
+        out.set(i, Math::isInf(value[i]));
+    return out;
+}
+
+#ifndef DOXYGEN_GENERATING_OUTPUT
+template<std::size_t size, class T, typename std::enable_if<(size > Implementation::BitVectorMaxUnpackedSize), int>::type = 0> CORRADE_CONSTEXPR14 inline BitVector<size> isInf(const Vector<size, T>& value) {
     BitVector<size> out;
     for(std::size_t i = 0; i != size; ++i) if(Math::isInf(value[i]))
         out.set(i);
     return out;
 }
+#endif
 
 /**
 @brief If given number is a NaN
@@ -308,12 +322,34 @@ template<class T
 @overload
 @m_since{2019,10}
 */
-template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline BitVector<size> isNan(const Vector<size, T>& value) {
+template<std::size_t size, class T
+    #ifndef DOXYGEN_GENERATING_OUTPUT
+    , typename std::enable_if<(size <= Implementation::BitVectorMaxUnpackedSize), int>::type = 0
+    #endif
+> CORRADE_ALWAYS_INLINE CORRADE_CONSTEXPR14 BitVector<size> isNan(const Vector<size, T>& value) {
+    /* MSVC calls this out of line for 5 to 8 components otherwise */
+    BitVector<size> out;
+    _MAGNUM_GCC_UNROLL
+    for(std::size_t i = 0; i != size; ++i)
+        #if defined(CORRADE_TARGET_MSVC) && !defined(CORRADE_TARGET_CLANG_CL)
+        /* MSVC computes all of fpclassify() for std::isnan() unless the
+           result is branched on */
+        if(Math::isNan(value[i]))
+            out.set(i);
+        #else
+        out.set(i, Math::isNan(value[i]));
+        #endif
+    return out;
+}
+
+#ifndef DOXYGEN_GENERATING_OUTPUT
+template<std::size_t size, class T, typename std::enable_if<(size > Implementation::BitVectorMaxUnpackedSize), int>::type = 0> CORRADE_CONSTEXPR14 inline BitVector<size> isNan(const Vector<size, T>& value) {
     BitVector<size> out;
     for(std::size_t i = 0; i != size; ++i) if(Math::isNan(value[i]))
         out.set(i);
     return out;
 }
+#endif
 
 /**
 @brief Minimum
@@ -744,27 +780,54 @@ template<class T> constexpr inline T lerp(const T& a, const T& b, bool t) {
     return t ? b : a;
 }
 
+#ifndef DOXYGEN_GENERATING_OUTPUT
+namespace Implementation {
+    template<std::size_t size, class T, bool = (size > Implementation::BitVectorMaxUnpackedSize)> struct LerpBitVector {
+        template<std::size_t ...sequence> CORRADE_ALWAYS_INLINE static constexpr VectorTypeFor<size, T> lerp(Containers::Implementation::Sequence<sequence...>, const Vector<size, T>& a, const Vector<size, T>& b, const BitVector<size>& t) {
+            return VectorTypeFor<size, T>{(t[sequence] ? b[sequence] : a[sequence])...};
+        }
+        CORRADE_ALWAYS_INLINE static constexpr VectorTypeFor<size, T> lerp(const Vector<size, T>& a, const Vector<size, T>& b, const BitVector<size>& t) {
+            return lerp(typename Containers::Implementation::GenerateSequence<size>::Type{}, a, b, t);
+        }
+    };
+    template<std::size_t size, class T> struct LerpBitVector<size, T, true> {
+        static CORRADE_CONSTEXPR14 VectorTypeFor<size, T> lerp(const Vector<size, T>& a, const Vector<size, T>& b, const BitVector<size>& t) {
+            #if CORRADE_CXX_STANDARD >= 202002L
+            VectorTypeFor<size, T> out{Magnum::NoInit};
+            #else
+            VectorTypeFor<size, T> out{ZeroInit};
+            #endif
+            for(std::size_t i = 0; i != size; ++i)
+                out[i] = t[i] ? b[i] : a[i];
+            return out;
+        }
+    };
+}
+#endif
+
 /** @overload
 Similar to the above, but instead of multiplication and addition it just does
 component-wise selection from either @p a or @p b based on values in @p t.
 @m_keyword{mix(),GLSL mix(),}
 @see @ref Vector::Vector(const BitVector<size>&)
 */
-template<std::size_t size, class T> CORRADE_CONSTEXPR14 inline VectorTypeFor<size, T> lerp(const Vector<size, T>& a, const Vector<size, T>& b, const BitVector<size>& t) {
-    #if CORRADE_CXX_STANDARD >= 202002L
-    VectorTypeFor<size, T> out{Magnum::NoInit};
-    #else
-    VectorTypeFor<size, T> out{ZeroInit};
-    #endif
-    for(std::size_t i = 0; i != size; ++i)
-        out[i] = t[i] ? b[i] : a[i];
-    return out;
+template<std::size_t size, class T> CORRADE_ALWAYS_INLINE CORRADE_CONSTEXPR14 VectorTypeFor<size, T> lerp(const Vector<size, T>& a, const Vector<size, T>& b, const BitVector<size>& t) {
+    return Implementation::LerpBitVector<size, T>::lerp(a, b, t);
 }
 
 /** @overload
 @m_keyword{mix(),GLSL mix(),}
 */
-template<std::size_t size> CORRADE_CONSTEXPR14 inline BitVector<size> lerp(const BitVector<size>& a, const BitVector<size>& b, const BitVector<size>& t) {
+template<std::size_t size
+    #ifndef DOXYGEN_GENERATING_OUTPUT
+    , typename std::enable_if<(size <= Implementation::BitVectorMaxUnpackedSize), int>::type = 0
+    #endif
+> CORRADE_ALWAYS_INLINE CORRADE_CONSTEXPR14 BitVector<size> lerp(const BitVector<size>& a, const BitVector<size>& b, const BitVector<size>& t) {
+    return a ^ ((a ^ b) & t);
+}
+
+#ifndef DOXYGEN_GENERATING_OUTPUT
+template<std::size_t size, typename std::enable_if<(size > Implementation::BitVectorMaxUnpackedSize), int>::type = 0> CORRADE_CONSTEXPR14 inline BitVector<size> lerp(const BitVector<size>& a, const BitVector<size>& b, const BitVector<size>& t) {
     /* Not using NoInit because it causes some compilers to report unitialized
        value */
     BitVector<size> out;
@@ -772,6 +835,7 @@ template<std::size_t size> CORRADE_CONSTEXPR14 inline BitVector<size> lerp(const
         out.set(i, t[i] ? b[i] : a[i]);
     return out;
 }
+#endif
 
 /**
 @brief Inverse linear interpolation of two values
