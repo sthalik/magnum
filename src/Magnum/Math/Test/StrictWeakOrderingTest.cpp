@@ -32,10 +32,6 @@
 #include "Magnum/Math/Vector2.h"
 #include "Magnum/Math/StrictWeakOrdering.h"
 
-namespace std {
-    template<> struct less<Magnum::Math::Vector2<int>>: Magnum::Math::Implementation::StrictWeakOrdering<Magnum::Math::Vector2<int>> {};
-}
-
 namespace Magnum { namespace Math { namespace Test { namespace {
 
 struct StrictWeakOrderingTest: TestSuite::Tester {
@@ -49,16 +45,24 @@ struct StrictWeakOrderingTest: TestSuite::Tester {
 
 using Vector2i = Magnum::Math::Vector2<Int>;
 
+/* libc++ 22+ replaces std::less<T> with std::less<> in set lookups, and a
+   specialization must be equivalent to operator< (llvm/llvm-project#178847). */
+template<class T> struct Less {
+    bool operator()(const T& a, const T& b) const { return a < b; }
+};
+
+template<> struct Less<Vector2i>: Implementation::StrictWeakOrdering<Vector2i> {};
+
 StrictWeakOrderingTest::StrictWeakOrderingTest() {
     addTests({&StrictWeakOrderingTest::base,
 
               &StrictWeakOrderingTest::set<std::set<Vector2i, Implementation::StrictWeakOrdering<Vector2i>>>,
               &StrictWeakOrderingTest::set<std::set<Vector2i, StrictWeakOrdering>>,
-              &StrictWeakOrderingTest::set<std::set<Vector2i>>,
+              &StrictWeakOrderingTest::set<std::set<Vector2i, Less<Vector2i>>>,
 
               &StrictWeakOrderingTest::map<std::map<Vector2i, Int, Implementation::StrictWeakOrdering<Vector2i>>>,
               &StrictWeakOrderingTest::map<std::map<Vector2i, Int, StrictWeakOrdering>>,
-              &StrictWeakOrderingTest::map<std::map<Vector2i, Int>>});
+              &StrictWeakOrderingTest::map<std::map<Vector2i, Int, Less<Vector2i>>>});
 }
 
 void StrictWeakOrderingTest::base() {
@@ -80,8 +84,8 @@ template<> struct Compare<Implementation::StrictWeakOrdering<Vector2i>> {
 template<> struct Compare<StrictWeakOrdering> {
     static const char* name() { return "StrictWeakOrdering"; }
 };
-template<> struct Compare<std::less<Vector2i>> {
-    static const char* name() { return "std::less<Vector2i>"; }
+template<> struct Compare<Less<Vector2i>> {
+    static const char* name() { return "Less<Vector2i>"; }
 };
 
 template<class Set> void StrictWeakOrderingTest::set() {
