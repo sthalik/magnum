@@ -43,6 +43,7 @@ struct FunctionsBatchTest: TestSuite::Tester {
     void min();
     void max();
     void minmax();
+    void minMaxConstexpr();
 
     void nanIgnoring();
     void nanIgnoringVector();
@@ -63,6 +64,7 @@ FunctionsBatchTest::FunctionsBatchTest() {
               &FunctionsBatchTest::min,
               &FunctionsBatchTest::max,
               &FunctionsBatchTest::minmax,
+              &FunctionsBatchTest::minMaxConstexpr,
 
               &FunctionsBatchTest::nanIgnoring,
               &FunctionsBatchTest::nanIgnoringVector,
@@ -204,6 +206,86 @@ void FunctionsBatchTest::minmax() {
 
     /* Wrapped types */
     CORRADE_COMPARE(Math::minmax({1.0_radf, 2.0_radf, 3.0_radf}), Containers::pair(1.0_radf, 3.0_radf));
+}
+
+CORRADE_CONSTEXPR14 Containers::Pair<Int, Int> mutableMinMax() {
+    Int array[]{13, -7, 23};
+    return {Math::min(array), Math::max(array)};
+}
+
+CORRADE_CONSTEXPR14 Containers::Pair<Int, Int> mutableViewMinMax() {
+    Int array[]{13, -7, 23};
+    Containers::ArrayView<Int> view{array};
+    return {Math::min(view), Math::max<Int>(view)};
+}
+
+void FunctionsBatchTest::minMaxConstexpr() {
+    #if CORRADE_CXX_STANDARD >= 201402 && !defined(CORRADE_MSVC2015_COMPATIBILITY)
+    constexpr Int array[]{13, -7, 23};
+    constexpr Int minArray = Math::min(array);
+    constexpr Int maxArray = Math::max<Int>(array);
+    CORRADE_COMPARE(minArray, -7);
+    CORRADE_COMPARE(maxArray, 23);
+
+    constexpr Containers::Pair<Int, Int> mutableArray = mutableMinMax();
+    constexpr Containers::Pair<Int, Int> mutableView = mutableViewMinMax();
+    CORRADE_COMPARE(mutableArray, Containers::pair(-7, 23));
+    CORRADE_COMPARE(mutableView, Containers::pair(-7, 23));
+
+    constexpr Float floatArray[]{13.0f, -7.0f, 23.0f};
+    constexpr Float minView = Math::min(Containers::arrayView(floatArray));
+    constexpr Float maxView = Math::max(Containers::arrayView(floatArray));
+    CORRADE_COMPARE(minView, -7.0f);
+    CORRADE_COMPARE(maxView, 23.0f);
+
+    constexpr Vector3i vectors[]{{13, -7, 23}, {-11, 17, 5}, {19, 3, -29}};
+    constexpr Vector3i minVectors = Math::min(vectors);
+    constexpr Vector3i maxVectors = Math::max(vectors);
+    CORRADE_COMPARE(minVectors, (Vector3i{-11, -7, -29}));
+    CORRADE_COMPARE(maxVectors, (Vector3i{19, 17, 23}));
+
+    constexpr Vector2 floatVectors[]{{13.0f, -7.0f}, {-11.0f, 17.0f}};
+    constexpr Vector2 minFloatVectors = Math::min(floatVectors);
+    constexpr Vector2 maxFloatVectors = Math::max(floatVectors);
+    CORRADE_COMPARE(minFloatVectors, (Vector2{-11.0f, -7.0f}));
+    CORRADE_COMPARE(maxFloatVectors, (Vector2{13.0f, 17.0f}));
+
+    constexpr Int minList = Math::min({13, -7, 23});
+    constexpr Int maxList = Math::max({13, -7, 23});
+    CORRADE_COMPARE(minList, -7);
+    CORRADE_COMPARE(maxList, 23);
+
+    constexpr Vector3i minVectorList = Math::min({vectors[0], vectors[1], vectors[2]});
+    constexpr Vector3i maxVectorList = Math::max({vectors[0], vectors[1], vectors[2]});
+    CORRADE_COMPARE(minVectorList, minVectors);
+    CORRADE_COMPARE(maxVectorList, maxVectors);
+
+    constexpr Vector2 minFloatVectorList = Math::min({floatVectors[0], floatVectors[1]});
+    constexpr Vector2 maxFloatVectorList = Math::max({floatVectors[0], floatVectors[1]});
+    CORRADE_COMPARE(minFloatVectorList, minFloatVectors);
+    CORRADE_COMPARE(maxFloatVectorList, maxFloatVectors);
+
+    constexpr auto minWrapped = Math::min({13.0_degf, 7.0_degf, 23.0_degf});
+    constexpr auto maxWrapped = Math::max({13.0_degf, 7.0_degf, 23.0_degf});
+    CORRADE_COMPARE(minWrapped, 7.0_degf);
+    CORRADE_COMPARE(maxWrapped, 23.0_degf);
+
+    constexpr Int minEmpty = Math::min(std::initializer_list<Int>{});
+    constexpr Vector3i maxEmpty = Math::max(std::initializer_list<Vector3i>{});
+    constexpr Vector2 minEmptyView = Math::min(Containers::ArrayView<const Vector2>{});
+    constexpr Float maxEmptyView = Math::max(Containers::ArrayView<const Float>{});
+    CORRADE_COMPARE(minEmpty, 0);
+    CORRADE_COMPARE(maxEmpty, Vector3i{});
+    CORRADE_COMPARE(minEmptyView, Vector2{});
+    CORRADE_COMPARE(maxEmptyView, 0.0f);
+
+    constexpr Vector3i minSingle = Math::min({Vector3i{13, -7, 23}});
+    constexpr Vector3i maxSingle = Math::max({Vector3i{13, -7, 23}});
+    CORRADE_COMPARE(minSingle, (Vector3i{13, -7, 23}));
+    CORRADE_COMPARE(maxSingle, (Vector3i{13, -7, 23}));
+    #else
+    CORRADE_SKIP("C++14 constexpr is not supported.");
+    #endif
 }
 
 void FunctionsBatchTest::nanIgnoring() {

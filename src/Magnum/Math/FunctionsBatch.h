@@ -173,11 +173,11 @@ template<class T, std::size_t size> inline auto isNan(const T(&array)[size]) -> 
 
 namespace Implementation {
     /* Non-floating-point types, the first is a non-NaN for sure */
-    template<class T, bool any> constexpr Containers::Pair<std::size_t, T> firstNonNan(Containers::StridedArrayView1D<const T> range, std::false_type, std::integral_constant<bool, any>) {
+    template<class T, class View, bool any> constexpr Containers::Pair<std::size_t, T> firstNonNan(View range, std::false_type, std::integral_constant<bool, any>) {
         return {0, range.front()};
     }
     /* Floating-point scalars, return the first that's not NaN */
-    template<class T> inline Containers::Pair<std::size_t, T> firstNonNan(Containers::StridedArrayView1D<const T> range, std::true_type, std::false_type) {
+    template<class T, class View> CORRADE_CONSTEXPR14 inline Containers::Pair<std::size_t, T> firstNonNan(View range, std::true_type, std::false_type) {
         /* Find the first non-NaN value to compare against. If all are NaN,
            return the last value so the following loop in min/max/minmax()
            doesn't even execute. */
@@ -192,7 +192,7 @@ namespace Implementation {
        apply the min/max/minmax operation. I expect the cases of heavily
        NaN-filled vectors (and thus the need to loop twice through most of the
        range) to be very rare, so this shouldn't be a problem. */
-    template<class T> inline Containers::Pair<std::size_t, T> firstNonNan(Containers::StridedArrayView1D<const T> range, std::true_type, std::true_type) {
+    template<class T, class View> CORRADE_CONSTEXPR14 inline Containers::Pair<std::size_t, T> firstNonNan(View range, std::true_type, std::true_type) {
         T out = range[0];
         std::size_t firstValid = 0;
         for(std::size_t i = 1; i != range.size(); ++i) {
@@ -218,11 +218,28 @@ template<class T> inline T min(const Containers::StridedArrayView1D<const T>& ra
     if(range.isEmpty())
         return {};
 
-    Containers::Pair<std::size_t, T> iOut = Implementation::firstNonNan(range, IsFloatingPoint<T>{}, IsVector<T>{});
+    Containers::Pair<std::size_t, T> iOut = Implementation::firstNonNan<T>(range, IsFloatingPoint<T>{}, IsVector<T>{});
     for(++iOut.first(); iOut.first() != range.size(); ++iOut.first())
         iOut.second() = Math::min(iOut.second(), range[iOut.first()]);
 
     return iOut.second();
+}
+
+/** @overload */
+template<class T> CORRADE_CONSTEXPR14 inline T min(Containers::ArrayView<const T> range) {
+    if(range.isEmpty())
+        return {};
+
+    Containers::Pair<std::size_t, T> iOut = Implementation::firstNonNan<T>(range, IsFloatingPoint<T>{}, IsVector<T>{});
+    for(++iOut.first(); iOut.first() != range.size(); ++iOut.first())
+        iOut.second() = Math::min(iOut.second(), range[iOut.first()]);
+
+    return iOut.second();
+}
+
+/** @overload */
+template<class T> constexpr T min(Containers::ArrayView<T> range) {
+    return Math::min(Containers::ArrayView<const T>{range});
 }
 
 /**
@@ -255,17 +272,18 @@ template<class T, typename std::enable_if<IsScalar<T>::value, int>::type = 0> CO
 }
 
 /** @overload */
-template<class T, typename std::enable_if<IsVector<T>::value, int>::type = 0> inline T min(std::initializer_list<T> list) {
-    /* Specifying the template explicitly to avoid recursion into the generic
-       function again */
-    return min<T>(Containers::stridedArrayView(list));
+template<class T, typename std::enable_if<IsVector<T>::value, int>::type = 0> CORRADE_CONSTEXPR14 inline T min(std::initializer_list<T> list) {
+    return Math::min(Containers::ArrayView<const T>{list.begin(), list.size()});
 }
 
 /** @overload */
-template<class T, std::size_t size> inline T min(const T(&array)[size]) {
-    /* Specifying the template explicitly to avoid recursion into the generic
-       function again */
-    return min<T>(Containers::StridedArrayView1D<const T>{array});
+template<class T, std::size_t size> constexpr T min(const T(&array)[size]) {
+    return Math::min(Containers::ArrayView<const T>{array});
+}
+
+/** @overload */
+template<class T, std::size_t size> constexpr T min(T(&array)[size]) {
+    return Math::min(Containers::ArrayView<const T>{array});
 }
 
 /**
@@ -279,11 +297,28 @@ template<class T> inline T max(const Containers::StridedArrayView1D<const T>& ra
     if(range.isEmpty())
         return {};
 
-    Containers::Pair<std::size_t, T> iOut = Implementation::firstNonNan(range, IsFloatingPoint<T>{}, IsVector<T>{});
+    Containers::Pair<std::size_t, T> iOut = Implementation::firstNonNan<T>(range, IsFloatingPoint<T>{}, IsVector<T>{});
     for(++iOut.first(); iOut.first() != range.size(); ++iOut.first())
         iOut.second() = Math::max(iOut.second(), range[iOut.first()]);
 
     return iOut.second();
+}
+
+/** @overload */
+template<class T> CORRADE_CONSTEXPR14 inline T max(Containers::ArrayView<const T> range) {
+    if(range.isEmpty())
+        return {};
+
+    Containers::Pair<std::size_t, T> iOut = Implementation::firstNonNan<T>(range, IsFloatingPoint<T>{}, IsVector<T>{});
+    for(++iOut.first(); iOut.first() != range.size(); ++iOut.first())
+        iOut.second() = Math::max(iOut.second(), range[iOut.first()]);
+
+    return iOut.second();
+}
+
+/** @overload */
+template<class T> constexpr T max(Containers::ArrayView<T> range) {
+    return Math::max(Containers::ArrayView<const T>{range});
 }
 
 /**
@@ -316,17 +351,18 @@ template<class T, typename std::enable_if<IsScalar<T>::value, int>::type = 0> CO
 }
 
 /** @overload */
-template<class T, typename std::enable_if<IsVector<T>::value, int>::type = 0> inline T max(std::initializer_list<T> list) {
-    /* Specifying the template explicitly to avoid recursion into the generic
-       function again */
-    return max<T>(Containers::stridedArrayView(list));
+template<class T, typename std::enable_if<IsVector<T>::value, int>::type = 0> CORRADE_CONSTEXPR14 inline T max(std::initializer_list<T> list) {
+    return Math::max(Containers::ArrayView<const T>{list.begin(), list.size()});
 }
 
 /** @overload */
-template<class T, std::size_t size> inline T max(const T(&array)[size]) {
-    /* Specifying the template explicitly to avoid recursion into the generic
-       function again */
-    return max<T>(Containers::StridedArrayView1D<const T>{array});
+template<class T, std::size_t size> constexpr T max(const T(&array)[size]) {
+    return Math::max(Containers::ArrayView<const T>{array});
+}
+
+/** @overload */
+template<class T, std::size_t size> constexpr T max(T(&array)[size]) {
+    return Math::max(Containers::ArrayView<const T>{array});
 }
 
 namespace Implementation {
@@ -353,12 +389,32 @@ template<class T> inline Containers::Pair<T, T> minmax(const Containers::Strided
     if(range.isEmpty())
         return {};
 
-    Containers::Pair<std::size_t, T> iOut = Implementation::firstNonNan(range, IsFloatingPoint<T>{}, IsVector<T>{});
+    Containers::Pair<std::size_t, T> iOut = Implementation::firstNonNan<T>(range, IsFloatingPoint<T>{}, IsVector<T>{});
     T min{iOut.second()}, max{iOut.second()};
     for(++iOut.first(); iOut.first() != range.size(); ++iOut.first())
         Implementation::minmax(min, max, range[iOut.first()]);
 
     return {min, max};
+}
+
+/** @overload */
+template<class T> CORRADE_CONSTEXPR14 inline Containers::Pair<T, T> minmax(Containers::ArrayView<const T> range) {
+    if(range.isEmpty())
+        return {};
+
+    Containers::Pair<std::size_t, T> iOut = Implementation::firstNonNan<T>(range, IsFloatingPoint<T>{}, IsVector<T>{});
+    T min{iOut.second()}, max{iOut.second()};
+    for(++iOut.first(); iOut.first() != range.size(); ++iOut.first()) {
+        min = Math::min(min, range[iOut.first()]);
+        max = Math::max(max, range[iOut.first()]);
+    }
+
+    return {min, max};
+}
+
+/** @overload */
+template<class T> constexpr Containers::Pair<T, T> minmax(Containers::ArrayView<T> range) {
+    return Math::minmax(Containers::ArrayView<const T>{range});
 }
 
 /**
@@ -376,17 +432,35 @@ template<class Iterable, class T = decltype(Implementation::stridedArrayViewType
 }
 
 /** @overload */
-template<class T> inline Containers::Pair<T, T> minmax(std::initializer_list<T> list) {
-    /* Specifying the template explicitly to avoid recursion into the generic
-       function again */
-    return minmax<T>(Containers::stridedArrayView(list));
+template<class T, typename std::enable_if<IsScalar<T>::value || (IsVector<T>::value && !IsFloatingPoint<T>::value), int>::type = 0> CORRADE_CONSTEXPR14 inline Containers::Pair<T, T> minmax(std::initializer_list<T> list) {
+    if(list.size() == 0)
+        return {};
+
+    const T* data = list.begin();
+    std::size_t i = Implementation::firstNonNan(data, list.size(), IsFloatingPoint<T>{});
+    T min(data[i]), max(data[i]);
+
+    for(++i; i != list.size(); ++i) {
+        min = Math::min(min, data[i]);
+        max = Math::max(max, data[i]);
+    }
+
+    return {min, max};
 }
 
 /** @overload */
-template<class T, std::size_t size> inline Containers::Pair<T, T> minmax(const T(&array)[size]) {
-    /* Specifying the template explicitly to avoid recursion into the generic
-       function again */
-    return minmax<T>(Containers::StridedArrayView1D<const T>{array});
+template<class T, typename std::enable_if<IsVector<T>::value && IsFloatingPoint<T>::value, int>::type = 0> CORRADE_CONSTEXPR14 inline Containers::Pair<T, T> minmax(std::initializer_list<T> list) {
+    return Math::minmax(Containers::ArrayView<const T>{list.begin(), list.size()});
+}
+
+/** @overload */
+template<class T, std::size_t size> constexpr Containers::Pair<T, T> minmax(const T(&array)[size]) {
+    return Math::minmax(Containers::ArrayView<const T>{array});
+}
+
+/** @overload */
+template<class T, std::size_t size> constexpr Containers::Pair<T, T> minmax(T(&array)[size]) {
+    return Math::minmax(Containers::ArrayView<const T>{array});
 }
 
 /* Since 1.8.17, the original short-hand group closing doesn't work anymore.
