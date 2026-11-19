@@ -62,7 +62,10 @@ MeshState::MeshState(Context& context, ContextState& contextState, Containers::S
         #endif
 
         #ifndef MAGNUM_TARGET_GLES
-        if(context.isExtensionSupported<Extensions::ARB::direct_state_access>()
+        /* ARB_direct_state_access has DSA variants of ARB_vertex_attrib_binding
+           functions only if that extension is supported as well */
+        if(context.isExtensionSupported<Extensions::ARB::direct_state_access>() &&
+           context.isExtensionSupported<Extensions::ARB::vertex_attrib_binding>()
             #ifdef CORRADE_TARGET_WINDOWS
             && (!(context.detectedDriver() & Context::DetectedDriver::IntelWindows) ||
             context.isDriverWorkaroundDisabled("intel-windows-crazy-broken-vao-dsa"_s))
@@ -70,6 +73,8 @@ MeshState::MeshState(Context& context, ContextState& contextState, Containers::S
         ) {
             extensions[Extensions::ARB::direct_state_access::Index] =
                        Extensions::ARB::direct_state_access::string();
+            extensions[Extensions::ARB::vertex_attrib_binding::Index] =
+                       Extensions::ARB::vertex_attrib_binding::string();
 
             /* Intel Windows drivers are ... special */
             #ifdef CORRADE_TARGET_WINDOWS
@@ -470,7 +475,8 @@ MeshState::MeshState(Context& context, ContextState& contextState, Containers::S
     #endif
 
     #ifndef MAGNUM_TARGET_GLES
-    if(context.isExtensionSupported<Extensions::ARB::direct_state_access>()
+    if(context.isExtensionSupported<Extensions::ARB::direct_state_access>() &&
+       context.isExtensionSupported<Extensions::ARB::vertex_attrib_binding>()
         #ifdef CORRADE_TARGET_WINDOWS
         && (!(context.detectedDriver() & Context::DetectedDriver::IntelWindows) ||
         context.isDriverWorkaroundDisabled("intel-windows-crazy-broken-vao-dsa"_s))
@@ -478,6 +484,8 @@ MeshState::MeshState(Context& context, ContextState& contextState, Containers::S
     ) {
         extensions[Extensions::ARB::direct_state_access::Index] =
                    Extensions::ARB::direct_state_access::string();
+        extensions[Extensions::ARB::vertex_attrib_binding::Index] =
+                   Extensions::ARB::vertex_attrib_binding::string();
 
         vertexAttribDivisorImplementation = &Mesh::vertexAttribDivisorImplementationVAODSA;
     } else if(context.isExtensionSupported<Extensions::ARB::vertex_array_object>()) {
