@@ -481,7 +481,8 @@ WindowlessEglContext::WindowlessEglContext(const Configuration& configuration, G
 
         /* The workaround check is the last so it doesn't appear in workaround
            list on unrelated drivers */
-        const Containers::StringView vendorString = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
+        auto* getString = get_glGetString();
+        const Containers::StringView vendorString = reinterpret_cast<const char*>(getString(GL_VENDOR));
         /* Unlike GLFW/SDL2/WGL there's no Intel here because EGL doesn't work
            with native drivers on Windows, only though ANGLE etc, and those
            don't suffer from this issue. */

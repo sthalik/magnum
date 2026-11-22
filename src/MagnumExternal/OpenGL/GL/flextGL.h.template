@@ -121,6 +121,8 @@ struct FlextGL {
 };
 
 extern MAGNUM_GL_EXPORT FlextGL flextGL;
+
+decltype(FlextGL::GetString) get_glGetString();
 @for cat,funcs in functions:
 @if funcs:
 

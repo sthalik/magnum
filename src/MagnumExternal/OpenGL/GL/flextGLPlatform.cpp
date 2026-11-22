@@ -877,3 +877,8 @@ void flextGLInit(Magnum::GL::Context& context) {
     flextGL.PolygonOffsetClamp = reinterpret_cast<void(APIENTRY*)(GLfloat, GLfloat, GLfloat)>(loader.load("glPolygonOffsetClamp"));
     flextGL.SpecializeShader = reinterpret_cast<void(APIENTRY*)(GLuint, const GLchar *, GLuint, const GLuint *, const GLuint *)>(loader.load("glSpecializeShader"));
 }
+
+decltype(FlextGL::GetString) get_glGetString() {
+    static const auto address = reinterpret_cast<decltype(FlextGL::GetString)>(Magnum::Platform::Implementation::OpenGLFunctionLoader{}.load("glGetString"));
+    return address ? address : flextGL.GetString;
+}

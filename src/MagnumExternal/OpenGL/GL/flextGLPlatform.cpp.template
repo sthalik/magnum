@@ -78,3 +78,8 @@ void flextGLInit(Magnum::GL::Context& context) {
     @end
     @end
 }
+
+decltype(FlextGL::GetString) get_glGetString() {
+    static const auto address = reinterpret_cast<decltype(FlextGL::GetString)>(Magnum::Platform::Implementation::OpenGLFunctionLoader{}.load("glGetString"));
+    return address ? address : flextGL.GetString;
+}

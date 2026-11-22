@@ -44,24 +44,28 @@ extern @f.returntype APIENTRY gl@f.name\
 @end
 @end
 
-FlextGL flextGL{
-    @for category,funcs in functions:
-    @if funcs and category in ['VERSION_1_0', 'VERSION_1_1']:
-
-    /* GL_@category */
-    @for f in funcs:
-    gl@f.name,
-    @end
-    @elif funcs:
-
-    /* GL_@category */
-    @for f in funcs:
-    nullptr,
-    @end
-    @end
-    @end
-};
+FlextGL flextGL{};
 
 #ifdef __cplusplus
 }
 #endif
+
+namespace {
+
+/* Assigned before main() so flextGL can be zero-initialized. The stores are
+   volatile because clang would otherwise move them into its initializer. */
+struct GL11FunctionPointerInitializer {
+    GL11FunctionPointerInitializer() {
+        @for category,funcs in functions:
+        @if funcs and category in ['VERSION_1_0', 'VERSION_1_1']:
+
+        /* GL_@category */
+        @for f in funcs:
+        static_cast<volatile FlextGL&>(flextGL).@f.name = gl@f.name;
+        @end
+        @end
+        @end
+    }
+} gl11FunctionPointerInitializer;
+
+}

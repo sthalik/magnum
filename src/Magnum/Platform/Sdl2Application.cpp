@@ -809,11 +809,12 @@ bool Sdl2Application::tryCreate(const Configuration& configuration, const GLConf
        completely useless behavior. */
     #ifndef CORRADE_TARGET_APPLE
     Containers::StringView vendorString;
+    auto* getString = get_glGetString();
     #endif
     if(glConfiguration.version() == GL::Version::None && (!_glContext
         #ifndef CORRADE_TARGET_APPLE
         /* Sorry about the UGLY code, HOPEFULLY THERE WON'T BE MORE WORKAROUNDS */
-        || (vendorString = reinterpret_cast<const char*>(glGetString(GL_VENDOR)),
+        || (vendorString = reinterpret_cast<const char*>(getString(GL_VENDOR)),
         (vendorString == "NVIDIA Corporation"_s ||
          #ifdef CORRADE_TARGET_WINDOWS
          vendorString == "Intel"_s ||

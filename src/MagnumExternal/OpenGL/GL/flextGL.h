@@ -2725,6 +2725,8 @@ struct FlextGL {
 
 extern MAGNUM_GL_EXPORT FlextGL flextGL;
 
+decltype(FlextGL::GetString) get_glGetString();
+
 /* GL_AMD_sample_positions */
 
 #define glSetMultisamplefvAMD flextGL.SetMultisamplefvAMD
