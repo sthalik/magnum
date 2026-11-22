@@ -207,6 +207,15 @@ BufferState::BufferState(Context& context, Containers::StaticArrayView<Implement
     {
         dataImplementation = &Buffer::dataImplementationDefault;
     }
+
+    if(context.isExtensionSupported<Extensions::ARB::direct_state_access>() &&
+      (context.detectedDriver() & Context::DetectedDriver::Mesa) &&
+      context.rendererString().hasPrefix("D3D12"_s) &&
+      !context.isDriverWorkaroundDisabled("mesa-d3d12-broken-dsa-buffer-data-store"_s))
+    {
+        dataImplementation = &Buffer::dataImplementationDefault;
+        storageImplementation = &Buffer::storageImplementationDefault;
+    }
     #endif
 
     #if defined(MAGNUM_TARGET_GLES) && !defined(MAGNUM_TARGET_GLES2) && !defined(MAGNUM_TARGET_WEBGL)

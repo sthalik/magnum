@@ -263,6 +263,17 @@ constexpr Containers::StringView KnownWorkarounds[]{
    the non-DSA glBufferData() works. */
 "svga3d-broken-dsa-bufferdata"_s,
 
+/* Mesa's d3d12 driver keeps drawing a vertex buffer's old contents after an
+   upload that covers the whole buffer, if its data store was allocated with
+   glNamedBufferData() or glNamedBufferStorage(). The DSA calls have no
+   target, so Mesa gives the data store no PIPE_BIND_VERTEX_BUFFER flag, and
+   d3d12_rebind_buffer() repoints vertex buffer views only for resources
+   with that flag after the threaded context replaces a busy buffer's
+   storage. The non-DSA glBufferData() and glBufferStorage() work, and so
+   does GALLIUM_THREAD=0. Seen with Mesa 26.2.6 on Windows. Similar to
+   "svga3d-broken-dsa-bufferdata". */
+"mesa-d3d12-broken-dsa-buffer-data-store"_s,
+
 /* SVGA3D does out-of-bound writes in some cases of glGetTexSubImage(), leading
    to memory corruption on client machines. That's nasty, so the whole
    ARB_get_texture_sub_image is disabled. */
